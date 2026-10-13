@@ -1,0 +1,57 @@
+meta {
+  name: Register User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Student Tester",
+    "email": "{{registerEmail}}",
+    "password": "password1"
+  }
+}
+
+script:pre-request {
+  const timestamp = Date.now();
+  bru.setVar("registerEmail", `student_${timestamp}@example.com`);
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    if (data.tokens && data.tokens.access) {
+      bru.setVar("accessToken", data.tokens.access.token);
+      bru.setVar("studentAccessToken", data.tokens.access.token);
+    }
+    if (data.tokens && data.tokens.refresh) {
+      bru.setVar("refreshToken", data.tokens.refresh.token);
+    }
+    if (data.user && data.user.id) {
+      bru.setVar("userId", data.user.id);
+    }
+    bru.setVar("userRole", "user");
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.user: isDefined
+  res.body.tokens.access.token: isDefined
+  res.body.tokens.refresh.token: isDefined
+}
+
+tests {
+  test("registered user receives tokens and user object", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(201);
+    expect(body.user.role).to.equal("user");
+    expect(body.tokens.access.token).to.be.a("string");
+  });
+}

@@ -1,0 +1,27 @@
+meta {
+  name: 403 - Forbidden (Student Token on Admin Endpoint)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+assert {
+  res.status: eq 403
+  res.body.code: eq 403
+  res.body.message: eq "Forbidden"
+}
+
+tests {
+  test("returns 403 Forbidden when student accesses admin endpoint", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

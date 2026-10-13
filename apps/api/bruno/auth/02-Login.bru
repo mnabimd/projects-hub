@@ -1,0 +1,54 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{userEmail}}",
+    "password": "{{userPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const data = res.getBody();
+    if (data.tokens && data.tokens.access) {
+      bru.setVar("accessToken", data.tokens.access.token);
+      if (data.user && data.user.role === "user") {
+        bru.setVar("studentAccessToken", data.tokens.access.token);
+      }
+    }
+    if (data.tokens && data.tokens.refresh) {
+      bru.setVar("refreshToken", data.tokens.refresh.token);
+    }
+    if (data.user && data.user.id) {
+      bru.setVar("userId", data.user.id);
+    }
+    if (data.user && data.user.role) {
+      bru.setVar("userRole", data.user.role);
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.user: isDefined
+  res.body.tokens.access.token: isDefined
+}
+
+tests {
+  test("login returns valid JWT tokens", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.tokens.access.token).to.be.a("string");
+    expect(body.tokens.refresh.token).to.be.a("string");
+  });
+}

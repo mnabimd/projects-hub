@@ -1,0 +1,41 @@
+meta {
+  name: Login (Admin)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const data = res.getBody();
+    if (data.tokens && data.tokens.access) {
+      bru.setVar("accessToken", data.tokens.access.token);
+      bru.setVar("adminAccessToken", data.tokens.access.token);
+    }
+    if (data.tokens && data.tokens.refresh) {
+      bru.setVar("refreshToken", data.tokens.refresh.token);
+    }
+    if (data.user && data.user.id) {
+      bru.setVar("adminUserId", data.user.id);
+    }
+    bru.setVar("userRole", "admin");
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.user.role: eq admin
+  res.body.tokens.access.token: isDefined
+}

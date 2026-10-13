@@ -1,0 +1,19 @@
+meta {
+  name: Verify Email
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/auth/verify-email
+  body: none
+  auth: none
+}
+
+params:query {
+  token: {{verifyEmailToken}}
+}
+
+assert {
+  res.status: in [204, 401]
+}

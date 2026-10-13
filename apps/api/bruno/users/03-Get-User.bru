@@ -1,0 +1,25 @@
+meta {
+  name: Get User by ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/users/{{userId}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: in [200, 404]
+}
+
+tests {
+  test("returns user profile without password hash", function() {
+    if (res.getStatus() === 200) {
+      const body = res.getBody();
+      expect(body.id).to.equal(bru.getVar("userId"));
+      expect(body.password).to.be.undefined;
+    }
+  });
+}

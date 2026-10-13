@@ -1,0 +1,15 @@
+meta {
+  name: Send Verification Email
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/send-verification-email
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 204
+}

@@ -1,0 +1,35 @@
+meta {
+  name: Refresh Tokens
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh-tokens
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const data = res.getBody();
+    if (data.access) {
+      bru.setVar("accessToken", data.access.token);
+    }
+    if (data.refresh) {
+      bru.setVar("refreshToken", data.refresh.token);
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.access.token: isDefined
+  res.body.refresh.token: isDefined
+}

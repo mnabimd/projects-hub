@@ -1,0 +1,23 @@
+meta {
+  name: 401 - Unauthorized (Missing Token)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+  res.body.code: eq 401
+  res.body.message: eq "Please authenticate"
+}
+
+tests {
+  test("returns 401 when Authorization header is missing", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

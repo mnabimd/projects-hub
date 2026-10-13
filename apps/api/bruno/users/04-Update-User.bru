@@ -1,0 +1,30 @@
+meta {
+  name: Update User
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/users/{{userId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Updated Student Name"
+  }
+}
+
+assert {
+  res.status: in [200, 404]
+}
+
+tests {
+  test("updates user profile", function() {
+    if (res.getStatus() === 200) {
+      const body = res.getBody();
+      expect(body.name).to.equal("Updated Student Name");
+    }
+  });
+}

@@ -1,0 +1,50 @@
+meta {
+  name: Create User (Admin)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "New Student",
+    "email": "{{createUserEmail}}",
+    "password": "password1",
+    "role": "user"
+  }
+}
+
+script:pre-request {
+  const timestamp = Date.now();
+  bru.setVar("createUserEmail", `student_${timestamp}@example.com`);
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    if (data.id) {
+      bru.setVar("createdUserId", data.id);
+    }
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.email: isDefined
+  res.body.role: eq user
+}
+
+tests {
+  test("creates user with correct role and returns no password field", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(201);
+    expect(body.role).to.equal("user");
+    expect(body.password).to.be.undefined;
+  });
+}
