@@ -15,26 +15,26 @@ REST API for **ProjectsHub** — the single backend serving the student web port
 
 ```bash
 # install dependencies
-yarn install
+npm install
 
 # create your env file and fill in the values
 cp .env.example .env
 
 # run in development (nodemon)
-yarn dev
+npm run dev
 ```
 
 ## Scripts
 
 | Command | Description |
 |---|---|
-| `yarn dev` | Start the dev server with nodemon |
-| `yarn start` | Start in production with PM2 |
-| `yarn test` | Run tests |
-| `yarn coverage` | Run tests with coverage |
-| `yarn lint` / `yarn lint:fix` | Lint the code |
-| `yarn prettier` / `yarn prettier:fix` | Check / fix formatting |
-| `yarn docker:dev` | Run with Docker (development) |
+| `npm run dev` | Start the dev server with nodemon |
+| `npm start` | Start in production with PM2 |
+| `npm test` | Run tests |
+| `npm run coverage` | Run tests with coverage |
+| `npm run lint` / `npm run lint:fix` | Lint the code |
+| `npm run prettier` / `npm run prettier:fix` | Check / fix formatting |
+| `npm run docker:dev` | Run with Docker (development) |
 
 ## Project structure
 
