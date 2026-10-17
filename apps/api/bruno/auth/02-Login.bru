@@ -17,6 +17,16 @@ body:json {
   }
 }
 
+vars:pre-request {
+  baseUrl: http://localhost:4500/v1
+}
+
+assert {
+  res.status: eq 200
+  res.body.user: isDefined
+  res.body.tokens.access.token: isDefined
+}
+
 script:post-response {
   if (res.getStatus() === 200) {
     const data = res.getBody();
@@ -36,12 +46,6 @@ script:post-response {
       bru.setVar("userRole", data.user.role);
     }
   }
-}
-
-assert {
-  res.status: eq 200
-  res.body.user: isDefined
-  res.body.tokens.access.token: isDefined
 }
 
 tests {

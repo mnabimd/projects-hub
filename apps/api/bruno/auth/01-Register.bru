@@ -18,6 +18,17 @@ body:json {
   }
 }
 
+vars:pre-request {
+  registerEmail: mnabimd@gmail.com
+}
+
+assert {
+  res.status: eq 201
+  res.body.user: isDefined
+  res.body.tokens.access.token: isDefined
+  res.body.tokens.refresh.token: isDefined
+}
+
 script:pre-request {
   const timestamp = Date.now();
   bru.setVar("registerEmail", `student_${timestamp}@example.com`);
@@ -38,13 +49,6 @@ script:post-response {
     }
     bru.setVar("userRole", "user");
   }
-}
-
-assert {
-  res.status: eq 201
-  res.body.user: isDefined
-  res.body.tokens.access.token: isDefined
-  res.body.tokens.refresh.token: isDefined
 }
 
 tests {
