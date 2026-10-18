@@ -12,24 +12,10 @@ post {
 
 body:json {
   {
-    "name": "New Student",
-    "email": "{{createUserEmail}}",
+    "fullName": "New Student",
+    "email": "student1@gmail.com",
     "password": "password1",
-    "role": "user"
-  }
-}
-
-script:pre-request {
-  const timestamp = Date.now();
-  bru.setVar("createUserEmail", `student_${timestamp}@example.com`);
-}
-
-script:post-response {
-  if (res.getStatus() === 201) {
-    const data = res.getBody();
-    if (data.id) {
-      bru.setVar("createdUserId", data.id);
-    }
+    "role": "student"
   }
 }
 
@@ -38,6 +24,16 @@ assert {
   res.body.id: isDefined
   res.body.email: isDefined
   res.body.role: eq user
+}
+
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    if (data.id) {
+      bru.setVar("createdUserId", data.id);
+    }
+  }
 }
 
 tests {

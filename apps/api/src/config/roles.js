@@ -1,6 +1,8 @@
 const allRoles = {
-  user: [],
-  admin: ['getUsers', 'manageUsers'],
+  student: [],
+  teacher: ['getUsers'],
+  faculty_dean: ['getUsers', 'manageUsers'],
+  super_admin: ['getUsers', 'manageUsers'],
 };
 
 const roles = Object.keys(allRoles);
@@ -10,3 +12,5 @@ module.exports = {
   roles,
   roleRights,
 };
+
+
