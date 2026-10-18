@@ -12,14 +12,10 @@ post {
 
 body:json {
   {
-    "name": "Student Tester",
-    "email": "{{registerEmail}}",
+    "fullName": "Student Tester",
+    "email": "test@gmail.com",
     "password": "password1"
   }
-}
-
-vars:pre-request {
-  registerEmail: mnabimd@gmail.com
 }
 
 assert {
@@ -27,11 +23,6 @@ assert {
   res.body.user: isDefined
   res.body.tokens.access.token: isDefined
   res.body.tokens.refresh.token: isDefined
-}
-
-script:pre-request {
-  const timestamp = Date.now();
-  bru.setVar("registerEmail", `student_${timestamp}@example.com`);
 }
 
 script:post-response {

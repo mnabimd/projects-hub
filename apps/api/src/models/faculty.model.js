@@ -41,6 +41,8 @@ const facultySchema = new mongoose.Schema(
   }
 );
 
+facultySchema.index({ institutionId: 1 });
+
 facultySchema.plugin(toJSON);
 facultySchema.plugin(paginate);
 

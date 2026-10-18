@@ -47,6 +47,7 @@ const monographSchema = new mongoose.Schema(
 
     citationCount: {
       type: Number,
+      default: 0,
     },
   },
   {
@@ -86,7 +87,7 @@ const softwareSchema = new mongoose.Schema(
   }
 );
 
-// nnlike team members, review entries have their own ObjectId
+// Unlike team members, review entries have their own ObjectId
 const reviewSchema = new mongoose.Schema(
   {
     reviewerId: {
@@ -156,6 +157,7 @@ const projectSchema = new mongoose.Schema(
         'approved',
         'rejected',
       ],
+      default: 'draft',
     },
 
     versionNumber: {
@@ -216,11 +218,9 @@ projectSchema.index({
   'software.techTagIds': 1,
 });
 
-// Index 3: find projects by leader or team member
-projectSchema.index({
-  'leader.userId': 1,
-  'members.userId': 1,
-});
+// Index 3: find projects by leader or team member (indexed separately to optimize $or queries)
+projectSchema.index({ 'leader.userId': 1 });
+projectSchema.index({ 'members.userId': 1 });
 
 projectSchema.plugin(toJSON);
 projectSchema.plugin(paginate);

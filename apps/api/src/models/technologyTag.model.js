@@ -18,6 +18,8 @@ const technologyTagSchema = new mongoose.Schema({
   },
 });
 
+technologyTagSchema.index({ slug: 1 }, { unique: true });
+
 technologyTagSchema.plugin(toJSON);
 technologyTagSchema.plugin(paginate);
 

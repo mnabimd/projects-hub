@@ -6,10 +6,10 @@ describe('User model', () => {
     let newUser;
     beforeEach(() => {
       newUser = {
-        name: faker.name.findName(),
+        fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
-        role: 'user',
+        role: 'student',
       };
     });
 
@@ -44,14 +44,17 @@ describe('User model', () => {
   });
 
   describe('User toJSON()', () => {
-    test('should not return user password when toJSON is called', () => {
+    test('should not return user password or passwordHash when toJSON is called', () => {
       const newUser = {
-        name: faker.name.findName(),
+        fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
-        role: 'user',
+        role: 'student',
       };
-      expect(new User(newUser).toJSON()).not.toHaveProperty('password');
+      const user = new User(newUser);
+      expect(user.toJSON()).not.toHaveProperty('password');
+      expect(user.toJSON()).not.toHaveProperty('passwordHash');
     });
   });
 });
+

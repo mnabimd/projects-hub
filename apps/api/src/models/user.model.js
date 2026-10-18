@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const { toJSON, paginate } = require('./plugins');
+const { roles } = require('../config/roles');
 
 // the field names and four roles follow the database design pdf
 
@@ -25,6 +26,7 @@ const userSchema = new mongoose.Schema(
     studentId: {
       type: String,
       trim: true,
+      set: (v) => (v === '' ? undefined : v),
     },
 
     fullName: {
@@ -56,12 +58,8 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: [
-        'super_admin',
-        'faculty_dean',
-        'teacher',
-        'student',
-      ],
+      enum: roles,
+      default: 'student',
     },
 
     mustChangePassword: {
@@ -76,6 +74,29 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
+
+// Virtual field to accept plain password and populate passwordHash automatically
+userSchema.virtual('password').set(function (password) {
+  this._password = password;
+});
+
+userSchema.pre('validate', async function (next) {
+  const user = this;
+  if (user._password !== undefined) {
+    if (
+      typeof user._password !== 'string' ||
+      user._password.length < 8 ||
+      !/[a-zA-Z]/.test(user._password) ||
+      !/\d/.test(user._password)
+    ) {
+      this.invalidate('password', 'Password must be at least 8 characters and contain a letter and a number');
+    } else {
+      user.passwordHash = await bcrypt.hash(user._password, 8);
+      delete user._password;
+    }
+  }
+  next();
+});
 
 // Unique student IDs within an institution. A partial index avoids indexing
 // staff records that do not have a studentId
@@ -99,6 +120,10 @@ userSchema.plugin(paginate);
 
 
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+
   const existingUser = await this.findOne({
     email: email.trim().toLowerCase(),
     _id: {
@@ -125,6 +150,10 @@ userSchema.methods.setPassword = async function (plainPassword) {
 
 
 userSchema.methods.isPasswordMatch = async function (plainPassword) {
+  if (typeof plainPassword !== 'string') {
+    return false;
+  }
+
   let hash = this.passwordHash;
 
   // Normal queries do not include passwordHash because select: false is set.
