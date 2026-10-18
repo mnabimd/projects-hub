@@ -11,7 +11,7 @@ const tokenSchema = mongoose.Schema(
       index: true,
     },
     user: {
-      type: mongoose.SchemaTypes.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
     },
@@ -36,7 +36,7 @@ const tokenSchema = mongoose.Schema(
 
 // add plugin that converts mongoose to json
 tokenSchema.plugin(toJSON);
-userSchema.plugin(shortIdPlugin);
+tokenSchema.plugin(shortIdPlugin);
 
 
 /**

@@ -9,7 +9,7 @@ const { tokenTypes } = require('../config/tokens');
 
 /**
  * Generate token
- * @param {ObjectId} userId
+ * @param {String} userId
  * @param {Moment} expires
  * @param {string} type
  * @param {string} [secret]
@@ -28,7 +28,7 @@ const generateToken = (userId, expires, type, secret = config.jwt.secret) => {
 /**
  * Save a token
  * @param {string} token
- * @param {ObjectId} userId
+ * @param {String} userId
  * @param {Moment} expires
  * @param {string} type
  * @param {boolean} [blacklisted]
