@@ -3,10 +3,9 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const { toJSON, paginate } = require('./plugins');
 const { roles } = require('../config/roles');
+const shortIdPlugin = require('../utils/shortId-pulgin');
 
-// the field names and four roles follow the database design pdf
-
-const userSchema = new mongoose.Schema(
+const userSchema = mongoose.Schema(
   {
     institutionId: {
       type: mongoose.Schema.Types.ObjectId,
