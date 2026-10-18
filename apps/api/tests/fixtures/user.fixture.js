@@ -9,33 +9,36 @@ const hashedPassword = bcrypt.hashSync(password, salt);
 
 const userOne = {
   _id: mongoose.Types.ObjectId(),
-  name: faker.name.findName(),
+  fullName: faker.name.findName(),
   email: faker.internet.email().toLowerCase(),
   password,
-  role: 'user',
-  isEmailVerified: false,
+  role: 'student',
 };
 
 const userTwo = {
   _id: mongoose.Types.ObjectId(),
-  name: faker.name.findName(),
+  fullName: faker.name.findName(),
   email: faker.internet.email().toLowerCase(),
   password,
-  role: 'user',
-  isEmailVerified: false,
+  role: 'student',
 };
 
 const admin = {
   _id: mongoose.Types.ObjectId(),
-  name: faker.name.findName(),
+  fullName: faker.name.findName(),
   email: faker.internet.email().toLowerCase(),
   password,
-  role: 'admin',
-  isEmailVerified: false,
+  role: 'super_admin',
 };
 
 const insertUsers = async (users) => {
-  await User.insertMany(users.map((user) => ({ ...user, password: hashedPassword })));
+  await User.insertMany(
+    users.map((user) => ({
+      ...user,
+      fullName: user.fullName || user.name,
+      passwordHash: hashedPassword,
+    }))
+  );
 };
 
 module.exports = {

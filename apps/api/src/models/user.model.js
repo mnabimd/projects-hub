@@ -4,13 +4,36 @@ const bcrypt = require('bcryptjs');
 const { toJSON, paginate } = require('./plugins');
 const { roles } = require('../config/roles');
 const shortIdPlugin = require('../utils/shortId-pulgin');
+
 const userSchema = mongoose.Schema(
   {
-    name: {
+    institutionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'University',
+    },
+
+    facultyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Faculty',
+    },
+
+    // Department ObjectIds belong to embedded departments in a Faculty
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+
+    studentId: {
+      type: String,
+      trim: true,
+      set: (v) => (v === '' ? undefined : v),
+    },
+
+    fullName: {
       type: String,
       required: true,
       trim: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -23,69 +46,128 @@ const userSchema = mongoose.Schema(
         }
       },
     },
-    password: {
+
+    // this field stores a bcrypt hash, not a plaintext password
+    passwordHash: {
       type: String,
       required: true,
-      trim: true,
-      minlength: 8,
-      validate(value) {
-        if (!value.match(/\d/) || !value.match(/[a-zA-Z]/)) {
-          throw new Error('Password must contain at least one letter and one number');
-        }
-      },
-      private: true, // used by the toJSON plugin
+      private: true,
+      select: false,
     },
+
     role: {
       type: String,
       enum: roles,
-      default: 'user',
+      default: 'student',
     },
-    isEmailVerified: {
+
+    mustChangePassword: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   {
-    timestamps: true,
+    timestamps: {
+      createdAt: true,
+      updatedAt: false,
+    },
   }
 );
 
-// add plugin that converts mongoose to json
-userSchema.plugin(toJSON);
-userSchema.plugin(paginate);
+// Virtual field to accept plain password and populate passwordHash automatically
+userSchema.virtual('password').set(function (password) {
+  this._password = password;
+});
 
-/**
- * Check if email is taken
- * @param {string} email - The user's email
- * @param {ObjectId} [excludeUserId] - The id of the user to be excluded
- * @returns {Promise<boolean>}
- */
-userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
-  const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
-  return !!user;
-};
-
-/**
- * Check if password matches the user's password
- * @param {string} password
- * @returns {Promise<boolean>}
- */
-userSchema.methods.isPasswordMatch = async function (password) {
+userSchema.pre('validate', async function (next) {
   const user = this;
-  return bcrypt.compare(password, user.password);
-};
-
-userSchema.pre('save', async function (next) {
-  const user = this;
-  if (user.isModified('password')) {
-    user.password = await bcrypt.hash(user.password, 8);
+  if (user._password !== undefined) {
+    if (
+      typeof user._password !== 'string' ||
+      user._password.length < 8 ||
+      !/[a-zA-Z]/.test(user._password) ||
+      !/\d/.test(user._password)
+    ) {
+      this.invalidate('password', 'Password must be at least 8 characters and contain a letter and a number');
+    } else {
+      user.passwordHash = await bcrypt.hash(user._password, 8);
+      delete user._password;
+    }
   }
   next();
 });
-userSchema.plugin(shortIdPlugin);
-/**
- * @typedef User
- */
-const User = mongoose.model('User', userSchema);
+
+// Unique student IDs within an institution. A partial index avoids indexing
+// staff records that do not have a studentId
+userSchema.index(
+  {
+    studentId: 1,
+    institutionId: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      studentId: {
+        $type: 'string',
+      },
+    },
+  }
+);
+
+userSchema.plugin(toJSON);
+userSchema.plugin(paginate);
+
+
+userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+
+  const existingUser = await this.findOne({
+    email: email.trim().toLowerCase(),
+    _id: {
+      $ne: excludeUserId,
+    },
+  });
+
+  return !!existingUser;
+};
+
+
+userSchema.methods.setPassword = async function (plainPassword) {
+  if (
+    typeof plainPassword !== 'string' ||
+    plainPassword.length < 8 ||
+    !/[a-zA-Z]/.test(plainPassword) ||
+    !/\d/.test(plainPassword)
+  ) {
+    throw new Error('Password must be at least 8 characters and contain a letter and a number');
+  }
+
+  this.passwordHash = await bcrypt.hash(plainPassword, 8);
+};
+
+
+userSchema.methods.isPasswordMatch = async function (plainPassword) {
+  if (typeof plainPassword !== 'string') {
+    return false;
+  }
+
+  let hash = this.passwordHash;
+
+  // Normal queries do not include passwordHash because select: false is set.
+  if (!hash && !this.isNew) {
+    const userWithHash = await this.constructor.findById(this._id).select('+passwordHash');
+    hash = userWithHash && userWithHash.passwordHash;
+  }
+
+  if (!hash) {
+    return false;
+  }
+
+  return bcrypt.compare(plainPassword, hash);
+};
+
+const User = mongoose.model('User', userSchema, 'users');
 
 module.exports = User;
