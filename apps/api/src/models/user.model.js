@@ -3,7 +3,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const { toJSON, paginate } = require('./plugins');
 const { roles } = require('../config/roles');
-
+const shortIdPlugin = require('../utils/shortId-pulgin');
 const userSchema = mongoose.Schema(
   {
     name: {
@@ -82,7 +82,7 @@ userSchema.pre('save', async function (next) {
   }
   next();
 });
-
+userSchema.plugin(shortIdPlugin);
 /**
  * @typedef User
  */
