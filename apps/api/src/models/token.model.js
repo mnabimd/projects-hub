@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { toJSON } = require('./plugins');
 const { tokenTypes } = require('../config/tokens');
-const shortIdPlugin = require('../utils/shortId-pulgin');
+
 
 const tokenSchema = mongoose.Schema(
   {
@@ -36,7 +36,7 @@ const tokenSchema = mongoose.Schema(
 
 // add plugin that converts mongoose to json
 tokenSchema.plugin(toJSON);
-tokenSchema.plugin(shortIdPlugin);
+
 
 
 /**
