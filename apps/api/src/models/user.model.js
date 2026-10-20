@@ -8,18 +8,18 @@ const shortIdPlugin = require('../utils/shortId-pulgin');
 const userSchema = mongoose.Schema(
   {
     institutionId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'University',
     },
 
     facultyId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'Faculty',
     },
 
     // Department ObjectIds belong to embedded departments in a Faculty
     departmentId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
     },
 
     studentId: {
@@ -169,5 +169,7 @@ userSchema.methods.isPasswordMatch = async function (plainPassword) {
 };
 
 const User = mongoose.model('User', userSchema, 'users');
+
+userSchema.plugin(shortIdPlugin);
 
 module.exports = User;

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { toJSON, paginate } = require('./plugins');
+const shortIdPlugin = require('../utils/shortId-pulgin');
 
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
@@ -7,7 +8,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const memberSchema = new mongoose.Schema(
   {
     userId: {
-      type: ObjectId,
+      type: String,
       ref: 'User',
     },
 
@@ -226,5 +227,7 @@ projectSchema.plugin(toJSON);
 projectSchema.plugin(paginate);
 
 const Project = mongoose.model('Project', projectSchema, 'projects');
+
+projectSchema.plugin(shortIdPlugin);
 
 module.exports = Project;
