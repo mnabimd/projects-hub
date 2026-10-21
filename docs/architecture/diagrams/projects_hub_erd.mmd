@@ -1,0 +1,124 @@
+erDiagram
+    UNIVERSITIES ||--o{ FACULTIES : "operates"
+    UNIVERSITIES ||--o{ USERS : "registers"
+    UNIVERSITIES ||--o{ PROJECTS : "owns"
+    FACULTIES ||--|{ DEPARTMENTS : "embeds"
+    FACULTIES ||--o{ USERS : "contains"
+    FACULTIES ||--o{ PROJECTS : "contains"
+    USERS ||--o{ PROJECTS : "leads_or_members"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ TOKENS : "authenticates"
+    PROJECTS ||--o{ NOTIFICATIONS : "triggers"
+    PROJECTS }o--o{ TECHNOLOGY_TAGS : "tagged_with"
+    PROJECTS ||--|{ PROJECT_REVIEWS : "contains_reviews"
+    PROJECTS ||--|| PROJECT_MONOGRAPH : "has_monograph"
+    PROJECTS ||--|| PROJECT_SOFTWARE : "has_software"
+    PROJECTS ||--o| PROJECT_MEMBERS : "has_members"
+
+    UNIVERSITIES {
+        ObjectId _id PK
+        String name "Institution Name"
+        String domain UK "Unique Domain (e.g. uni.edu)"
+        Date createdAt "Timestamp"
+    }
+
+    FACULTIES {
+        ObjectId _id PK
+        ObjectId institutionId FK "ref: Universities"
+        String name "Faculty Name"
+        Date createdAt "Timestamp"
+    }
+
+    DEPARTMENTS {
+        ObjectId _id PK "Embedded ObjectId"
+        String name "Department Name"
+    }
+
+    USERS {
+        ObjectId _id PK
+        ObjectId institutionId FK "ref: Universities"
+        ObjectId facultyId FK "ref: Faculties"
+        ObjectId departmentId "FK to embedded department"
+        String studentId "Partial Unique with institutionId"
+        String fullName "User Full Name"
+        String email UK "Unique Email Address"
+        String passwordHash "Bcrypt Hash (hidden)"
+        String role "student | teacher | faculty_dean | super_admin"
+        Boolean mustChangePassword "Default: true"
+        Date createdAt "Timestamp"
+    }
+
+    PROJECTS {
+        ObjectId _id PK
+        ObjectId institutionId FK "ref: Universities"
+        ObjectId facultyId FK "ref: Faculties"
+        ObjectId departmentId "FK to embedded department"
+        Number graduationYear "Index (descending)"
+        String type "universal | science"
+        String title "Text Search Indexed"
+        String status "draft | submitted | revision_requested | approved | rejected"
+        Number versionNumber "Incremented on resubmit"
+        Boolean isLocked "Locked after approval"
+        ObjectId assignedTeacherId FK "ref: Users (Supervisor)"
+        Date createdAt "Timestamp"
+        Date updatedAt "Timestamp"
+    }
+
+    PROJECT_MEMBERS {
+        ObjectId userId FK "ref: Users"
+        String studentId "Denormalized Student ID"
+        String fullName "Denormalized Full Name"
+    }
+
+    PROJECT_MONOGRAPH {
+        String pdfFileUrl "Storage URL to Monograph PDF"
+        String abstract "Text Search Indexed"
+        String[] keywords "Text Search Indexed"
+        Date defenseDate "Defense / Presentation Date"
+        Number citationCount "Citation metric counter"
+    }
+
+    PROJECT_SOFTWARE {
+        String githubRepoUrl "Source Code Repository URL"
+        String liveDemoUrl "Public Deployment / Demo URL"
+        String[] screenshots "Screenshot Image URLs"
+        ObjectId[] techTagIds FK "ref: TechnologyTags"
+    }
+
+    PROJECT_REVIEWS {
+        ObjectId _id PK "Review Entry ID"
+        ObjectId reviewerId FK "ref: Users (Teacher/Dean)"
+        String action "approve | reject | request_revision"
+        String feedbackText "Evaluation & Guidance Notes"
+        Number versionAtReview "Project version evaluated"
+        Date createdAt "Review Timestamp"
+    }
+
+    TECHNOLOGY_TAGS {
+        ObjectId _id PK
+        String name "Technology Name (e.g. React)"
+        String category "frontend | backend | ai | devops"
+        String slug UK "Unique slug (e.g. react-native)"
+    }
+
+    NOTIFICATIONS {
+        ObjectId _id PK
+        ObjectId userId FK "ref: Users"
+        ObjectId projectId FK "ref: Projects"
+        String type "ACCEPTED | REJECTED"
+        String title "Notification Title"
+        String message "Notification Content Body"
+        Boolean isRead "Read Receipt (default false)"
+        Date createdAt "Timestamp"
+    }
+
+    TOKENS {
+        ObjectId _id PK
+        String token UK "Indexed JWT Token"
+        String user FK "ref: Users"
+        String type "refresh | resetPassword | verifyEmail"
+        Date expires "Expiration Timestamp"
+        Boolean blacklisted "Revocation status"
+        Date createdAt "Timestamp"
+        Date updatedAt "Timestamp"
+    }

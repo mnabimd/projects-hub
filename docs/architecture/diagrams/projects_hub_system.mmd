@@ -1,0 +1,62 @@
+flowchart TD
+    subgraph Clients ["Client Applications Layer"]
+        WebPortal["💻 Student & Academic Web Portal<br/><i>(Next.js / React)</i>"]
+        AdminDashboard["🏛️ Faculty & Admin Dashboard<br/><i>(Next.js / React Admin)</i>"]
+        MobileApp["📱 Mobile Application<br/><i>(React Native / Expo)</i>"]
+    end
+
+    subgraph Gateway_Middleware ["API Gateway & Middleware Layer (apps/api)"]
+        ReverseProxy["Reverse Proxy / Nginx / Load Balancer"]
+        ExpressApp["Express.js REST API Server"]
+        
+        subgraph Middlewares ["Middlewares Stack"]
+            M_Auth["JWT Passport Authentication"]
+            M_RBAC["Role-Based Access Control (roles.js)"]
+            M_Joi["Joi Request Schema Validation"]
+            M_Rate["Express Rate Limiter"]
+            M_Error["Centralized Error Handler"]
+        end
+    end
+
+    subgraph Service_Domain ["Core Services & Domain Logic"]
+        S_Auth["Auth Service (Tokens, Bcrypt)"]
+        S_User["User & Faculty Service"]
+        S_Project["Project Lifecycle Service"]
+        S_Search["Catalog Search & Filter Engine"]
+        S_Notif["Notification Service"]
+    end
+
+    subgraph Data_Storage ["Persistence & External Services"]
+        MongoDB[("🍃 MongoDB Database<br/><i>universities, faculties, users,<br/>projects, tags, notifications, tokens</i>")]
+        S3Storage[("☁️ Object Storage (S3 / Cloudinary)<br/><i>Monograph PDFs, Screenshots</i>")]
+        SMTPMail["✉️ Email Notification Provider (Nodemailer / SMTP)"]
+    end
+
+    %% Client requests
+    WebPortal -->|HTTPS / JSON| ReverseProxy
+    AdminDashboard -->|HTTPS / JSON| ReverseProxy
+    MobileApp -->|HTTPS / JSON| ReverseProxy
+
+    %% Gateway to Express
+    ReverseProxy --> ExpressApp
+    ExpressApp --> M_Rate
+    M_Rate --> M_Auth
+    M_Auth --> M_RBAC
+    M_RBAC --> M_Joi
+    M_Joi --> M_Error
+
+    %% Route to Services
+    ExpressApp --> S_Auth
+    ExpressApp --> S_User
+    ExpressApp --> S_Project
+    ExpressApp --> S_Search
+    ExpressApp --> S_Notif
+
+    %% Services to persistence
+    S_Auth <--> MongoDB
+    S_User <--> MongoDB
+    S_Project <--> MongoDB
+    S_Project -->|Upload / Download| S3Storage
+    S_Search <--> MongoDB
+    S_Notif <--> MongoDB
+    S_Notif --> SMTPMail

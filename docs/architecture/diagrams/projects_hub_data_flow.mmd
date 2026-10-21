@@ -1,0 +1,75 @@
+flowchart TB
+    %% External Entities
+    subgraph Entities ["Actors & External Entities"]
+        Student["🎓 Student / Project Leader"]
+        Teacher["👨‍🏫 Teacher / Project Supervisor"]
+        Dean["🏛️ Faculty Dean / Admin"]
+        Guest["🌐 Public Visitor / Researcher"]
+    end
+
+    %% Main Application Processes
+    subgraph Core_Processes ["ProjectsHub Core API Processes"]
+        P1["1.0 Authentication & Session Control<br/><i>(JWT, Bcrypt, Role Validation)</i>"]
+        P2["2.0 Institution & Faculty Hierarchy<br/><i>(Universities, Faculties, Departments)</i>"]
+        P3["3.0 Project Authoring & Versioning<br/><i>(Draft, Submit, Asset Attachment)</i>"]
+        P4["4.0 Supervisor Review & Revision Loop<br/><i>(Feedback, Actions, Version Check)</i>"]
+        P5["5.0 Dean Approval & Archival Locking<br/><i>(Locking, Status: Approved/Rejected)</i>"]
+        P6["6.0 Discovery & Full-Text Search<br/><i>(Catalog Queries, Tech Filters)</i>"]
+        P7["7.0 Event & Notification Dispatcher<br/><i>(Accepted, Rejected Alerts)</i>"]
+    end
+
+    %% Data Stores
+    subgraph Data_Stores ["Persistent Data Stores"]
+        D1[("D1: Users & Tokens<br/><i>(users, tokens)</i>")]
+        D2[("D2: Academic Institutions<br/><i>(universities, faculties)</i>")]
+        D3[("D3: Projects Repository<br/><i>(projects collection)</i>")]
+        D4[("D4: Technology Taxonomy<br/><i>(technology_tags)</i>")]
+        D5[("D5: User Notifications<br/><i>(notifications)</i>")]
+        D6[("D6: Cloud Object Storage<br/><i>(Monograph PDFs, Screenshots)</i>")]
+    end
+
+    %% Flows - Authentication
+    Student -->|"1a. Login / Register with Student ID"| P1
+    Teacher -->|"1b. Login with Institution Email"| P1
+    Dean -->|"1c. Admin Authentication"| P1
+    P1 <-->|"Verify hash, issue JWT tokens"| D1
+    P1 <-->|"Verify domain & institution"| D2
+
+    %% Flows - Institution Management
+    Dean -->|"2a. Manage Faculty & Departments"| P2
+    P2 -->|"Write institution structure"| D2
+
+    %% Flows - Project Authoring
+    Student -->|"3a. Create Draft / Update Metadata"| P3
+    Student -->|"3b. Upload Monograph PDF & Media"| P3
+    P3 -->|"Store binary documents"| D6
+    P3 -->|"Link technology tags"| D4
+    P3 -->|"Write draft & member profiles"| D3
+    Student -->|"3c. Submit for Review (increments ver.)"| P3
+    P3 -->|"Trigger status: submitted"| P7
+
+    %% Flows - Supervisor Review Loop
+    P7 -->|"4a. Alert new submission"| Teacher
+    Teacher -->|"4b. Inspect Project, Code & PDF"| P4
+    P4 <-->|"Fetch project & documents"| D3
+    P4 <-->|"Stream PDF file"| D6
+    Teacher -->|"4c. Post Review (revision / approve)"| P4
+    P4 -->|"Append review entry to project"| D3
+    P4 -->|"Trigger revision requested event"| P7
+    P7 -->|"4d. Notify revision needed"| Student
+
+    %% Flows - Dean Approval & Publication
+    Teacher -->|"5a. Recommend for Approval"| P5
+    Dean -->|"5b. Final Approval / Rejection"| P5
+    P5 -->|"Update status: approved, isLocked: true"| D3
+    P5 -->|"Trigger acceptance event"| P7
+    P7 -->|"Store notification record"| D5
+    P7 -->|"Alert student of approval"| Student
+
+    %% Flows - Discovery & Search
+    Guest -->|"6a. Search title, abstract, tags, year"| P6
+    Student -->|"6b. Browse approved academic catalog"| P6
+    P6 <-->|"Compound index & text search (status: approved)"| D3
+    P6 <-->|"Fetch tag metadata"| D4
+    P6 <-->|"Download monograph PDF"| D6
+    P6 -->|"6c. Return Paginated Results & Details"| Guest
