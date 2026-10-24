@@ -1,0 +1,36 @@
+stateDiagram-v2
+    [*] --> Draft : Student initializes project
+
+    state Draft {
+        [*] --> IncompleteMetadata
+        IncompleteMetadata --> CompleteMetadata : Add Title, Abstract, Type, Year
+        CompleteMetadata --> AssetsAttached : Upload Monograph PDF & Software URLs
+    }
+
+    Draft --> Submitted : Student Submits (version: 1)
+    
+    state Submitted {
+        [*] --> AwaitingSupervisorAssignment
+        AwaitingSupervisorAssignment --> UnderReview : Supervisor assigned (assignedTeacherId)
+    }
+
+    UnderReview --> RevisionRequested : Supervisor adds review (action: request_revision)
+    RevisionRequested --> Draft : Student edits monograph / software (versionNumber++)
+    Draft --> Submitted : Student resubmits (versionNumber increments)
+
+    UnderReview --> Approved : Supervisor recommends & Dean approves
+    UnderReview --> Rejected : Final decision (action: reject)
+
+    state Approved {
+        [*] --> RecordLocked : isLocked = true
+        RecordLocked --> CatalogPublished : Visible in public search
+        CatalogPublished --> NotificationSent : Notification(type: ACCEPTED)
+    }
+
+    state Rejected {
+        [*] --> ArchivedRejection : Record preserved for audit
+        ArchivedRejection --> RejectionNotification : Notification(type: REJECTED)
+    }
+
+    Approved --> [*]
+    Rejected --> [*]

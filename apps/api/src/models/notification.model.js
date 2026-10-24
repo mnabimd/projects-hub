@@ -1,16 +1,15 @@
 const mongoose = require('mongoose');
-const { toJSON, paginate } = require('./plugins');
-const shortIdPlugin = require('../utils/shortId-pulgin');
+const { toJSON, paginate, publicId } = require('./plugins');
 
 const notificationSchema = new mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
 
     projectId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'Project',
     },
 
@@ -44,8 +43,8 @@ notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
 
 notificationSchema.plugin(toJSON);
 notificationSchema.plugin(paginate);
+notificationSchema.plugin(publicId, { prefix: 'ntf' });
 
 const Notification = mongoose.model('Notification', notificationSchema, 'notifications');
 
-notificationSchema.plugin(shortIdPlugin);
 module.exports = Notification;

@@ -1,17 +1,4 @@
-const { nanoid } = require('nanoid');
+// Deprecated: use models/plugins/publicId.plugin.js instead
+const publicIdPlugin = require('../models/plugins/publicId.plugin');
 
-module.exports = function shortIdPlugin(schema) {
-  schema.add({
-    _id: { type: String, default: () => nanoid(10) },
-  });
-
-  schema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: (doc, ret) => {
-      ret.id = ret._id;
-      delete ret._id;
-      return ret;
-    },
-  });
-};
+module.exports = publicIdPlugin;
