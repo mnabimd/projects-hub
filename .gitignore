@@ -38,3 +38,6 @@ coverage/
 # ─── Expo / React Native ────────────────────
 .expo/
 web-build/
+
+#_____ personal data e.g: notes
+.me/*

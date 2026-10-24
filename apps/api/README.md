@@ -13,7 +13,7 @@ REST API for **ProjectsHub** — the single backend serving the student web port
 
 ## Getting started
 
-For a full step-by-step onboarding walkthrough, environment variables reference, Gmail SMTP configuration, and seeding guide, see the [Environment Setup & Runbook](./docs/SETUP.md).
+For a full step-by-step onboarding walkthrough, environment variables reference, Gmail SMTP configuration, and seeding guide, see the [Environment Setup & Runbook](./docs/SETUP.md). For the engineering roadmap, technical architecture blueprint, and endpoint specifications, see the [API Development Plan](./docs/API_DEVELOPMENT_PLAN.md).
 
 ```bash
 # install dependencies
