@@ -3,7 +3,6 @@ const faker = require('faker');
 const httpStatus = require('http-status');
 const httpMocks = require('node-mocks-http');
 const moment = require('moment');
-const bcrypt = require('bcryptjs');
 const app = require('../../src/app');
 const config = require('../../src/config/config');
 const auth = require('../../src/middlewares/auth');
@@ -23,7 +22,7 @@ describe('Auth routes', () => {
     let newUser;
     beforeEach(() => {
       newUser = {
-        name: faker.name.findName(),
+        fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
       };
@@ -33,18 +32,24 @@ describe('Auth routes', () => {
       const res = await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.CREATED);
 
       expect(res.body.user).not.toHaveProperty('password');
-      expect(res.body.user).toEqual({
+      expect(res.body.user).not.toHaveProperty('passwordHash');
+      expect(res.body.user).toMatchObject({
         id: expect.anything(),
-        name: newUser.name,
+        fullName: newUser.fullName,
         email: newUser.email,
-        role: 'user',
+        role: 'student',
         isEmailVerified: false,
       });
 
       const dbUser = await User.findById(res.body.user.id);
       expect(dbUser).toBeDefined();
-      expect(dbUser.password).not.toBe(newUser.password);
-      expect(dbUser).toMatchObject({ name: newUser.name, email: newUser.email, role: 'user', isEmailVerified: false });
+      expect(await dbUser.isPasswordMatch(newUser.password)).toBe(true);
+      expect(dbUser).toMatchObject({
+        fullName: newUser.fullName,
+        email: newUser.email,
+        role: 'student',
+        isEmailVerified: false,
+      });
 
       expect(res.body.tokens).toEqual({
         access: { token: expect.anything(), expires: expect.anything() },
@@ -92,9 +97,9 @@ describe('Auth routes', () => {
 
       const res = await request(app).post('/v1/auth/login').send(loginCredentials).expect(httpStatus.OK);
 
-      expect(res.body.user).toEqual({
+      expect(res.body.user).toMatchObject({
         id: expect.anything(),
-        name: userOne.name,
+        fullName: userOne.fullName,
         email: userOne.email,
         role: userOne.role,
         isEmailVerified: userOne.isEmailVerified,
@@ -276,7 +281,7 @@ describe('Auth routes', () => {
         .expect(httpStatus.NO_CONTENT);
 
       const dbUser = await User.findById(userOne._id);
-      const isPasswordMatch = await bcrypt.compare('password2', dbUser.password);
+      const isPasswordMatch = await dbUser.isPasswordMatch('password2');
       expect(isPasswordMatch).toBe(true);
 
       const dbResetPasswordTokenCount = await Token.countDocuments({ user: userOne._id, type: tokenTypes.RESET_PASSWORD });
@@ -580,7 +585,7 @@ describe('Auth middleware', () => {
     });
     const next = jest.fn();
 
-    await auth(...roleRights.get('admin'))(req, httpMocks.createResponse(), next);
+    await auth(...roleRights.get('super_admin'))(req, httpMocks.createResponse(), next);
 
     expect(next).toHaveBeenCalledWith();
   });

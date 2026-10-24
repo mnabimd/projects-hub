@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-const { toJSON, paginate } = require('./plugins');
-const shortIdPlugin = require('../utils/shortId-pulgin');
+const { toJSON, paginate, publicId } = require('./plugins');
 
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
@@ -8,7 +7,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const memberSchema = new mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: ObjectId,
       ref: 'User',
     },
 
@@ -225,9 +224,8 @@ projectSchema.index({ 'members.userId': 1 });
 
 projectSchema.plugin(toJSON);
 projectSchema.plugin(paginate);
+projectSchema.plugin(publicId, { prefix: 'prj' });
 
 const Project = mongoose.model('Project', projectSchema, 'projects');
-
-projectSchema.plugin(shortIdPlugin);
 
 module.exports = Project;

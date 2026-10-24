@@ -1,25 +1,24 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const { toJSON, paginate } = require('./plugins');
+const { toJSON, paginate, publicId } = require('./plugins');
 const { roles } = require('../config/roles');
-const shortIdPlugin = require('../utils/shortId-pulgin');
 
 const userSchema = mongoose.Schema(
   {
     institutionId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'University',
     },
 
     facultyId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'Faculty',
     },
 
     // Department ObjectIds belong to embedded departments in a Faculty
     departmentId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
     },
 
     studentId: {
@@ -64,6 +63,11 @@ const userSchema = mongoose.Schema(
     mustChangePassword: {
       type: Boolean,
       default: true,
+    },
+
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -116,6 +120,7 @@ userSchema.index(
 
 userSchema.plugin(toJSON);
 userSchema.plugin(paginate);
+userSchema.plugin(publicId, { prefix: 'usr' });
 
 
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
@@ -169,7 +174,5 @@ userSchema.methods.isPasswordMatch = async function (plainPassword) {
 };
 
 const User = mongoose.model('User', userSchema, 'users');
-
-userSchema.plugin(shortIdPlugin);
 
 module.exports = User;

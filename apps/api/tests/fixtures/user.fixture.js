@@ -13,7 +13,16 @@ const userOne = {
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'student',
+  isEmailVerified: false,
 };
+Object.defineProperty(userOne, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
 
 const userTwo = {
   _id: mongoose.Types.ObjectId(),
@@ -21,7 +30,16 @@ const userTwo = {
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'student',
+  isEmailVerified: false,
 };
+Object.defineProperty(userTwo, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
 
 const admin = {
   _id: mongoose.Types.ObjectId(),
@@ -29,13 +47,23 @@ const admin = {
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'super_admin',
+  isEmailVerified: false,
 };
+Object.defineProperty(admin, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
 
 const insertUsers = async (users) => {
   await User.insertMany(
     users.map((user) => ({
       ...user,
       fullName: user.fullName || user.name,
+      isEmailVerified: user.isEmailVerified !== undefined ? user.isEmailVerified : false,
       passwordHash: hashedPassword,
     }))
   );

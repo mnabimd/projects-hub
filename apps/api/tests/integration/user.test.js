@@ -15,10 +15,10 @@ describe('User routes', () => {
 
     beforeEach(() => {
       newUser = {
-        name: faker.name.findName(),
+        fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
-        role: 'user',
+        role: 'student',
       };
     });
 
@@ -32,9 +32,9 @@ describe('User routes', () => {
         .expect(httpStatus.CREATED);
 
       expect(res.body).not.toHaveProperty('password');
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         id: expect.anything(),
-        name: newUser.name,
+        fullName: newUser.fullName,
         email: newUser.email,
         role: newUser.role,
         isEmailVerified: false,
@@ -42,13 +42,18 @@ describe('User routes', () => {
 
       const dbUser = await User.findById(res.body.id);
       expect(dbUser).toBeDefined();
-      expect(dbUser.password).not.toBe(newUser.password);
-      expect(dbUser).toMatchObject({ name: newUser.name, email: newUser.email, role: newUser.role, isEmailVerified: false });
+      expect(await dbUser.isPasswordMatch(newUser.password)).toBe(true);
+      expect(dbUser).toMatchObject({
+        fullName: newUser.fullName,
+        email: newUser.email,
+        role: newUser.role,
+        isEmailVerified: false,
+      });
     });
 
     test('should be able to create an admin as well', async () => {
       await insertUsers([admin]);
-      newUser.role = 'admin';
+      newUser.role = 'super_admin';
 
       const res = await request(app)
         .post('/v1/users')
@@ -56,10 +61,10 @@ describe('User routes', () => {
         .send(newUser)
         .expect(httpStatus.CREATED);
 
-      expect(res.body.role).toBe('admin');
+      expect(res.body.role).toBe('super_admin');
 
       const dbUser = await User.findById(res.body.id);
-      expect(dbUser.role).toBe('admin');
+      expect(dbUser.role).toBe('super_admin');
     });
 
     test('should return 401 error if access token is missing', async () => {
@@ -158,9 +163,9 @@ describe('User routes', () => {
         totalResults: 3,
       });
       expect(res.body.results).toHaveLength(3);
-      expect(res.body.results[0]).toEqual({
+      expect(res.body.results[0]).toMatchObject({
         id: userOne._id.toHexString(),
-        name: userOne.name,
+        fullName: userOne.fullName,
         email: userOne.email,
         role: userOne.role,
         isEmailVerified: userOne.isEmailVerified,
@@ -183,17 +188,17 @@ describe('User routes', () => {
         .expect(httpStatus.FORBIDDEN);
     });
 
-    test('should correctly apply filter on name field', async () => {
+    test('should correctly apply filter on fullName field', async () => {
       await insertUsers([userOne, userTwo, admin]);
 
       const res = await request(app)
         .get('/v1/users')
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ name: userOne.name })
+        .query({ fullName: userOne.fullName })
         .send()
         .expect(httpStatus.OK);
 
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         results: expect.any(Array),
         page: 1,
         limit: 10,
@@ -210,11 +215,11 @@ describe('User routes', () => {
       const res = await request(app)
         .get('/v1/users')
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ role: 'user' })
+        .query({ role: 'student' })
         .send()
         .expect(httpStatus.OK);
 
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         results: expect.any(Array),
         page: 1,
         limit: 10,
@@ -236,30 +241,7 @@ describe('User routes', () => {
         .send()
         .expect(httpStatus.OK);
 
-      expect(res.body).toEqual({
-        results: expect.any(Array),
-        page: 1,
-        limit: 10,
-        totalPages: 1,
-        totalResults: 3,
-      });
-      expect(res.body.results).toHaveLength(3);
-      expect(res.body.results[0].id).toBe(userOne._id.toHexString());
-      expect(res.body.results[1].id).toBe(userTwo._id.toHexString());
-      expect(res.body.results[2].id).toBe(admin._id.toHexString());
-    });
-
-    test('should correctly sort the returned array if ascending sort param is specified', async () => {
-      await insertUsers([userOne, userTwo, admin]);
-
-      const res = await request(app)
-        .get('/v1/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ sortBy: 'role:asc' })
-        .send()
-        .expect(httpStatus.OK);
-
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         results: expect.any(Array),
         page: 1,
         limit: 10,
@@ -272,13 +254,36 @@ describe('User routes', () => {
       expect(res.body.results[2].id).toBe(userTwo._id.toHexString());
     });
 
+    test('should correctly sort the returned array if ascending sort param is specified', async () => {
+      await insertUsers([userOne, userTwo, admin]);
+
+      const res = await request(app)
+        .get('/v1/users')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .query({ sortBy: 'role:asc' })
+        .send()
+        .expect(httpStatus.OK);
+
+      expect(res.body).toMatchObject({
+        results: expect.any(Array),
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        totalResults: 3,
+      });
+      expect(res.body.results).toHaveLength(3);
+      expect(res.body.results[0].id).toBe(userOne._id.toHexString());
+      expect(res.body.results[1].id).toBe(userTwo._id.toHexString());
+      expect(res.body.results[2].id).toBe(admin._id.toHexString());
+    });
+
     test('should correctly sort the returned array if multiple sorting criteria are specified', async () => {
       await insertUsers([userOne, userTwo, admin]);
 
       const res = await request(app)
         .get('/v1/users')
         .set('Authorization', `Bearer ${adminAccessToken}`)
-        .query({ sortBy: 'role:desc,name:asc' })
+        .query({ sortBy: 'role:desc,fullName:asc' })
         .send()
         .expect(httpStatus.OK);
 
@@ -298,7 +303,7 @@ describe('User routes', () => {
         if (a.role > b.role) {
           return -1;
         }
-        return a.name < b.name ? -1 : 1;
+        return a.fullName < b.fullName ? -1 : 1;
       });
 
       expectedOrder.forEach((user, index) => {
@@ -361,10 +366,10 @@ describe('User routes', () => {
         .expect(httpStatus.OK);
 
       expect(res.body).not.toHaveProperty('password');
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         id: userOne._id.toHexString(),
         email: userOne.email,
-        name: userOne.name,
+        fullName: userOne.fullName,
         role: userOne.role,
         isEmailVerified: userOne.isEmailVerified,
       });
@@ -482,7 +487,7 @@ describe('User routes', () => {
     test('should return 200 and successfully update user if data is ok', async () => {
       await insertUsers([userOne]);
       const updateBody = {
-        name: faker.name.findName(),
+        fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'newPassword1',
       };
@@ -494,30 +499,30 @@ describe('User routes', () => {
         .expect(httpStatus.OK);
 
       expect(res.body).not.toHaveProperty('password');
-      expect(res.body).toEqual({
+      expect(res.body).toMatchObject({
         id: userOne._id.toHexString(),
-        name: updateBody.name,
+        fullName: updateBody.fullName,
         email: updateBody.email,
-        role: 'user',
+        role: 'student',
         isEmailVerified: false,
       });
 
       const dbUser = await User.findById(userOne._id);
       expect(dbUser).toBeDefined();
-      expect(dbUser.password).not.toBe(updateBody.password);
-      expect(dbUser).toMatchObject({ name: updateBody.name, email: updateBody.email, role: 'user' });
+      expect(await dbUser.isPasswordMatch(updateBody.password)).toBe(true);
+      expect(dbUser).toMatchObject({ fullName: updateBody.fullName, email: updateBody.email, role: 'student' });
     });
 
     test('should return 401 error if access token is missing', async () => {
       await insertUsers([userOne]);
-      const updateBody = { name: faker.name.findName() };
+      const updateBody = { fullName: faker.name.findName() };
 
       await request(app).patch(`/v1/users/${userOne._id}`).send(updateBody).expect(httpStatus.UNAUTHORIZED);
     });
 
     test('should return 403 if user is updating another user', async () => {
       await insertUsers([userOne, userTwo]);
-      const updateBody = { name: faker.name.findName() };
+      const updateBody = { fullName: faker.name.findName() };
 
       await request(app)
         .patch(`/v1/users/${userTwo._id}`)
@@ -528,7 +533,7 @@ describe('User routes', () => {
 
     test('should return 200 and successfully update user if admin is updating another user', async () => {
       await insertUsers([userOne, admin]);
-      const updateBody = { name: faker.name.findName() };
+      const updateBody = { fullName: faker.name.findName() };
 
       await request(app)
         .patch(`/v1/users/${userOne._id}`)
@@ -539,7 +544,7 @@ describe('User routes', () => {
 
     test('should return 404 if admin is updating another user that is not found', async () => {
       await insertUsers([admin]);
-      const updateBody = { name: faker.name.findName() };
+      const updateBody = { fullName: faker.name.findName() };
 
       await request(app)
         .patch(`/v1/users/${userOne._id}`)
@@ -550,7 +555,7 @@ describe('User routes', () => {
 
     test('should return 400 error if userId is not a valid mongo id', async () => {
       await insertUsers([admin]);
-      const updateBody = { name: faker.name.findName() };
+      const updateBody = { fullName: faker.name.findName() };
 
       await request(app)
         .patch(`/v1/users/invalidId`)
