@@ -13,6 +13,8 @@ REST API for **ProjectsHub** — the single backend serving the student web port
 
 ## Getting started
 
+For a full step-by-step onboarding walkthrough, environment variables reference, Gmail SMTP configuration, and seeding guide, see the [Environment Setup & Runbook](./docs/SETUP.md).
+
 ```bash
 # install dependencies
 npm install

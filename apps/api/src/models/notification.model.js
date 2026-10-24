@@ -1,15 +1,16 @@
 const mongoose = require('mongoose');
 const { toJSON, paginate } = require('./plugins');
+const shortIdPlugin = require('../utils/shortId-pulgin');
 
 const notificationSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
     },
 
     projectId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'Project',
     },
 
@@ -46,4 +47,5 @@ notificationSchema.plugin(paginate);
 
 const Notification = mongoose.model('Notification', notificationSchema, 'notifications');
 
+notificationSchema.plugin(shortIdPlugin);
 module.exports = Notification;
