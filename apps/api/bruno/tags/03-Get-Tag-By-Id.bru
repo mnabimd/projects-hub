@@ -1,0 +1,30 @@
+meta {
+  name: Get Tag By Id
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/tags/{{createdTagId}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  createdTagId: 6adcc664ccbc0d9b0cd565ee
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{createdTagId}}
+  res.body.name: isDefined
+  res.body.slug: isDefined
+}
+
+tests {
+  test("returns tag with correct id", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.id).to.equal(bru.getVar("createdTagId"));
+  });
+}

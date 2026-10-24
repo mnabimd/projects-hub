@@ -21,6 +21,17 @@ vars:pre-request {
   baseUrl: http://localhost:4500/v1
 }
 
+script:pre-request {
+  const email = bru.getEnvVar("userEmail") || bru.getVar("userEmail");
+  if (!email) {
+    bru.setVar("userEmail", "test@gmail.com");
+  }
+  const password = bru.getEnvVar("userPassword") || bru.getVar("userPassword");
+  if (!password) {
+    bru.setVar("userPassword", "password1");
+  }
+}
+
 assert {
   res.status: eq 200
   res.body.user: isDefined
@@ -31,18 +42,23 @@ script:post-response {
   if (res.getStatus() === 200) {
     const data = res.getBody();
     if (data.tokens && data.tokens.access) {
+      bru.setEnvVar("accessToken", data.tokens.access.token);
       bru.setVar("accessToken", data.tokens.access.token);
-      if (data.user && data.user.role === "user") {
+      if (data.user && (data.user.role === "student" || data.user.role === "user")) {
+        bru.setEnvVar("studentAccessToken", data.tokens.access.token);
         bru.setVar("studentAccessToken", data.tokens.access.token);
       }
     }
     if (data.tokens && data.tokens.refresh) {
+      bru.setEnvVar("refreshToken", data.tokens.refresh.token);
       bru.setVar("refreshToken", data.tokens.refresh.token);
     }
     if (data.user && data.user.id) {
+      bru.setEnvVar("userId", data.user.id);
       bru.setVar("userId", data.user.id);
     }
     if (data.user && data.user.role) {
+      bru.setEnvVar("userRole", data.user.role);
       bru.setVar("userRole", data.user.role);
     }
   }
