@@ -1,0 +1,21 @@
+meta {
+  name: Remove Department from Faculty (Admin)
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/faculties/{{createdFacultyId}}/departments/{{createdDepartmentId}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("atomically removes department and returns 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}

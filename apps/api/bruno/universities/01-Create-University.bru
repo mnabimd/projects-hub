@@ -1,0 +1,43 @@
+meta {
+  name: Create University (Admin)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/universities
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Balkh University",
+    "domain": "bu.edu.af"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isDefined
+  res.body.name: eq Balkh University
+  res.body.domain: eq bu.edu.af
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    if (data.id) {
+      bru.setVar("createdUniversityId", data.id);
+    }
+  }
+}
+
+tests {
+  test("creates university successfully and returns 201", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(201);
+    expect(body.name).to.equal("Balkh University");
+    expect(body.domain).to.equal("bu.edu.af");
+  });
+}

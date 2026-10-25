@@ -18,13 +18,15 @@ const departmentSchema = new mongoose.Schema(
 
 const facultySchema = new mongoose.Schema(
   {
-    institutionId: {
+    universityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'University',
+      required: true,
     },
 
     name: {
       type: String,
+      required: true,
       trim: true,
     },
 
@@ -41,7 +43,7 @@ const facultySchema = new mongoose.Schema(
   }
 );
 
-facultySchema.index({ institutionId: 1 });
+facultySchema.index({ universityId: 1 });
 
 facultySchema.plugin(toJSON);
 facultySchema.plugin(paginate);

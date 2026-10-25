@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const { toJSON } = require('./plugins');
 const { tokenTypes } = require('../config/tokens');
 
-
 const tokenSchema = mongoose.Schema(
   {
     token: {
@@ -36,8 +35,6 @@ const tokenSchema = mongoose.Schema(
 
 // add plugin that converts mongoose to json
 tokenSchema.plugin(toJSON);
-
-
 
 /**
  * @typedef Token

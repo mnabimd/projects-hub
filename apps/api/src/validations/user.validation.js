@@ -7,7 +7,9 @@ const createUser = {
     email: Joi.string().required().email(),
     password: Joi.string().required().custom(password),
     fullName: Joi.string().required(),
-    role: Joi.string().required().valid(...roles),
+    role: Joi.string()
+      .required()
+      .valid(...roles),
   }),
 };
 

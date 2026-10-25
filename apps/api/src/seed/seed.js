@@ -1,22 +1,15 @@
+/* eslint-disable import/no-extraneous-dependencies, no-empty */
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const faker = require('faker');
 const config = require('../config/config');
 const logger = require('../config/logger');
 const technologyTagsData = require('./data/tags.data');
-const {
-  University,
-  Faculty,
-  TechnologyTag,
-  User,
-  Project,
-  Notification,
-  Token,
-} = require('../models');
+const { University, Faculty, TechnologyTag, User, Project, Notification, Token } = require('../models');
 
 const isClean = process.argv.includes('--clean') || process.argv.includes('-c');
 
-const sampleInstitutions = [
+const sampleUniversities = [
   { name: 'Kandahar University', domain: 'kdun.edu.af' },
   { name: 'Kabul University', domain: 'ku.edu.af' },
   { name: 'Herat University', domain: 'hu.edu.af' },
@@ -26,44 +19,27 @@ const facultiesByUniversity = {
   'kdun.edu.af': [
     {
       name: 'Faculty of Computer Science',
-      departments: [
-        { name: 'Software Engineering' },
-        { name: 'Information Systems' },
-        { name: 'Networking & Security' },
-      ],
+      departments: [{ name: 'Software Engineering' }, { name: 'Information Systems' }, { name: 'Networking & Security' }],
     },
     {
       name: 'Faculty of Engineering',
-      departments: [
-        { name: 'Civil Engineering' },
-        { name: 'Energy & Electrical Engineering' },
-      ],
+      departments: [{ name: 'Civil Engineering' }, { name: 'Energy & Electrical Engineering' }],
     },
   ],
   'ku.edu.af': [
     {
       name: 'Faculty of Computer Science',
-      departments: [
-        { name: 'Software Engineering' },
-        { name: 'Artificial Intelligence' },
-        { name: 'Database Systems' },
-      ],
+      departments: [{ name: 'Software Engineering' }, { name: 'Artificial Intelligence' }, { name: 'Database Systems' }],
     },
     {
       name: 'Faculty of Engineering',
-      departments: [
-        { name: 'Mechanical Engineering' },
-        { name: 'Electrical Engineering' },
-      ],
+      departments: [{ name: 'Mechanical Engineering' }, { name: 'Electrical Engineering' }],
     },
   ],
   'hu.edu.af': [
     {
       name: 'Faculty of Computer Science',
-      departments: [
-        { name: 'Software Engineering' },
-        { name: 'Information Technology' },
-      ],
+      departments: [{ name: 'Software Engineering' }, { name: 'Information Technology' }],
     },
   ],
 };
@@ -75,7 +51,8 @@ const projectDefinitions = [
     status: 'approved',
     versionNumber: 2,
     isLocked: true,
-    abstract: 'A unified digital repository and workflow management system designed for Afghan universities to track student monographs, code deliverables, supervisor reviews, and public showcase catalogs.',
+    abstract:
+      'A unified digital repository and workflow management system designed for Afghan universities to track student monographs, code deliverables, supervisor reviews, and public showcase catalogs.',
     keywords: ['academic repository', 'workflow automation', 'monograph management', 'multi-tenancy'],
     githubRepoUrl: 'https://github.com/projectshub/projectshub-platform',
     liveDemoUrl: 'https://demo.projectshub.com',
@@ -88,7 +65,8 @@ const projectDefinitions = [
     status: 'approved',
     versionNumber: 1,
     isLocked: true,
-    abstract: 'An automated computer vision platform utilizing edge cameras to monitor examination halls, detect unauthorized devices, and register student attendance without physical signatures.',
+    abstract:
+      'An automated computer vision platform utilizing edge cameras to monitor examination halls, detect unauthorized devices, and register student attendance without physical signatures.',
     keywords: ['computer vision', 'facial recognition', 'proctoring', 'edge computing'],
     githubRepoUrl: 'https://github.com/projectshub/smart-proctor',
     liveDemoUrl: 'https://proctor.projectshub.com',
@@ -101,7 +79,8 @@ const projectDefinitions = [
     status: 'revision_requested',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'IoT sensors deployed on university campus solar installations streaming real-time wattage, battery degradation metrics, and temperature alerts to a central dashboard.',
+    abstract:
+      'IoT sensors deployed on university campus solar installations streaming real-time wattage, battery degradation metrics, and temperature alerts to a central dashboard.',
     keywords: ['solar energy', 'iot', 'energy optimization', 'embedded systems'],
     githubRepoUrl: 'https://github.com/projectshub/solar-iot-monitor',
     liveDemoUrl: null,
@@ -114,7 +93,8 @@ const projectDefinitions = [
     status: 'submitted',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'A privacy-preserving patient health information management system leveraging Hyperledger Fabric to prevent tamper incidents across regional clinics.',
+    abstract:
+      'A privacy-preserving patient health information management system leveraging Hyperledger Fabric to prevent tamper incidents across regional clinics.',
     keywords: ['blockchain', 'health informatics', 'cryptography', 'hyperledger'],
     githubRepoUrl: 'https://github.com/projectshub/decentralized-ehr',
     liveDemoUrl: 'https://ehr-preview.projectshub.com',
@@ -127,7 +107,8 @@ const projectDefinitions = [
     status: 'draft',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'A precision agriculture solution combining low-cost LoRaWAN soil moisture probes and drone multispectral imaging to optimize irrigation schedules.',
+    abstract:
+      'A precision agriculture solution combining low-cost LoRaWAN soil moisture probes and drone multispectral imaging to optimize irrigation schedules.',
     keywords: ['precision agriculture', 'lorawan', 'drone imagery', 'irrigation'],
     githubRepoUrl: 'https://github.com/projectshub/smart-irrigation',
     liveDemoUrl: null,
@@ -140,7 +121,8 @@ const projectDefinitions = [
     status: 'approved',
     versionNumber: 2,
     isLocked: true,
-    abstract: 'Semantic vector search engine indexing over 20,000 academic research papers, providing contextual recommendations for undergraduate senior thesis literature reviews.',
+    abstract:
+      'Semantic vector search engine indexing over 20,000 academic research papers, providing contextual recommendations for undergraduate senior thesis literature reviews.',
     keywords: ['vector search', 'information retrieval', 'recommendation system', 'nlp'],
     githubRepoUrl: 'https://github.com/projectshub/library-recommender',
     liveDemoUrl: 'https://library.projectshub.com',
@@ -153,7 +135,8 @@ const projectDefinitions = [
     status: 'rejected',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'Analyzing city intersection CCTV camera feeds to estimate vehicle density and dynamically adjust traffic signal intervals.',
+    abstract:
+      'Analyzing city intersection CCTV camera feeds to estimate vehicle density and dynamically adjust traffic signal intervals.',
     keywords: ['smart city', 'yolo', 'traffic management', 'computer vision'],
     githubRepoUrl: 'https://github.com/projectshub/traffic-vision',
     liveDemoUrl: null,
@@ -166,7 +149,8 @@ const projectDefinitions = [
     status: 'approved',
     versionNumber: 1,
     isLocked: true,
-    abstract: 'An offline-first Flutter application allowing rural community health workers to queue patient symptoms, photos, and voice notes for specialist doctors in urban hospitals.',
+    abstract:
+      'An offline-first Flutter application allowing rural community health workers to queue patient symptoms, photos, and voice notes for specialist doctors in urban hospitals.',
     keywords: ['telemedicine', 'flutter', 'offline-first', 'mobile health'],
     githubRepoUrl: 'https://github.com/projectshub/telemedicine-mobile',
     liveDemoUrl: 'https://telemed.projectshub.com',
@@ -179,7 +163,8 @@ const projectDefinitions = [
     status: 'submitted',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'Deep learning bidirectional LSTM-CTC model fine-tuned on Nastaliq and Naskh typography for automated transcription of historical manuscripts.',
+    abstract:
+      'Deep learning bidirectional LSTM-CTC model fine-tuned on Nastaliq and Naskh typography for automated transcription of historical manuscripts.',
     keywords: ['ocr', 'nlp', 'nastaliq', 'deep learning'],
     githubRepoUrl: 'https://github.com/projectshub/afghan-ocr-pipeline',
     liveDemoUrl: 'https://ocr.projectshub.com',
@@ -192,7 +177,8 @@ const projectDefinitions = [
     status: 'revision_requested',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'Automated semantic segmentation of concrete bridges and highway pavements to detect micro-cracks before structural failures occur.',
+    abstract:
+      'Automated semantic segmentation of concrete bridges and highway pavements to detect micro-cracks before structural failures occur.',
     keywords: ['structural health', 'uav', 'crack detection', 'segmentation'],
     githubRepoUrl: 'https://github.com/projectshub/uav-crack-seg',
     liveDemoUrl: null,
@@ -205,7 +191,8 @@ const projectDefinitions = [
     status: 'approved',
     versionNumber: 1,
     isLocked: true,
-    abstract: 'Zigbee and ESP32 energy metering nodes installed across university buildings sending sub-minute metrics to optimize HVAC and lighting schedules.',
+    abstract:
+      'Zigbee and ESP32 energy metering nodes installed across university buildings sending sub-minute metrics to optimize HVAC and lighting schedules.',
     keywords: ['smart campus', 'iot', 'zigbee', 'energy management'],
     githubRepoUrl: 'https://github.com/projectshub/campus-energy-iot',
     liveDemoUrl: 'https://energy.projectshub.com',
@@ -218,7 +205,8 @@ const projectDefinitions = [
     status: 'draft',
     versionNumber: 1,
     isLocked: false,
-    abstract: 'A distributed n-gram and cross-language embedding comparison engine detecting uncredited citations across English, Dari, and Pashto university theses.',
+    abstract:
+      'A distributed n-gram and cross-language embedding comparison engine detecting uncredited citations across English, Dari, and Pashto university theses.',
     keywords: ['plagiarism detection', 'text similarity', 'cross-lingual', 'nlp'],
     githubRepoUrl: 'https://github.com/projectshub/thesis-plagiarism-engine',
     liveDemoUrl: null,
@@ -258,7 +246,7 @@ const seedDatabase = async () => {
     // 1. Seed Universities
     // ==========================================
     logger.info('Seeding Universities...');
-    const insertedUniversities = await University.insertMany(sampleInstitutions);
+    const insertedUniversities = await University.insertMany(sampleUniversities);
     const universityMap = {};
     insertedUniversities.forEach((u) => {
       universityMap[u.domain] = u;
@@ -273,7 +261,7 @@ const seedDatabase = async () => {
       const university = universityMap[domain];
       faculties.forEach((f) => {
         facultyDocs.push({
-          institutionId: university._id,
+          universityId: university._id,
           name: f.name,
           departments: f.departments.map((d) => ({
             _id: mongoose.Types.ObjectId(),
@@ -311,12 +299,12 @@ const seedDatabase = async () => {
     });
 
     // 4b. Faculty Deans
-    insertedFaculties.forEach((faculty, idx) => {
-      const university = insertedUniversities.find((u) => u._id.equals(faculty.institutionId));
+    insertedFaculties.forEach((faculty) => {
+      const university = insertedUniversities.find((u) => u._id.equals(faculty.universityId));
       const facultyPrefix = faculty.name.includes('Computer') ? 'cs' : 'eng';
       const uniPrefix = university.domain.split('.')[0];
       userDocs.push({
-        institutionId: university._id,
+        universityId: university._id,
         facultyId: faculty._id,
         fullName: `Dr. ${faker.name.firstName()} ${faker.name.lastName()} (Dean)`,
         email: `dean.${facultyPrefix}.${uniPrefix}@${university.domain}`,
@@ -329,7 +317,7 @@ const seedDatabase = async () => {
     // 4c. Teachers and Students per Department
     const departmentContexts = [];
     insertedFaculties.forEach((faculty) => {
-      const university = insertedUniversities.find((u) => u._id.equals(faculty.institutionId));
+      const university = insertedUniversities.find((u) => u._id.equals(faculty.universityId));
       faculty.departments.forEach((dept) => {
         departmentContexts.push({
           university,
@@ -352,7 +340,7 @@ const seedDatabase = async () => {
       for (let t = 1; t <= 2; t += 1) {
         const teacherDoc = {
           _id: mongoose.Types.ObjectId(),
-          institutionId: ctx.university._id,
+          universityId: ctx.university._id,
           facultyId: ctx.faculty._id,
           departmentId: ctx.department._id,
           fullName: `Prof. ${faker.name.firstName()} ${faker.name.lastName()}`,
@@ -378,7 +366,7 @@ const seedDatabase = async () => {
 
         const studentDoc = {
           _id: mongoose.Types.ObjectId(),
-          institutionId: ctx.university._id,
+          universityId: ctx.university._id,
           facultyId: ctx.faculty._id,
           departmentId: ctx.department._id,
           studentId,
@@ -437,7 +425,7 @@ const seedDatabase = async () => {
 
       projectDocs.push({
         _id: projectId,
-        institutionId: ctx.university._id,
+        universityId: ctx.university._id,
         facultyId: ctx.faculty._id,
         departmentId: ctx.department._id,
         graduationYear: 2024 - (index % 3),
@@ -461,7 +449,7 @@ const seedDatabase = async () => {
           abstract: def.abstract,
           keywords: def.keywords,
           defenseDate: new Date(Date.now() + 86400000 * (30 - index * 2)),
-          citationCount: def.status === 'approved' ? 5 + (index * 3) : 0,
+          citationCount: def.status === 'approved' ? 5 + index * 3 : 0,
         },
         software: {
           githubRepoUrl: def.githubRepoUrl,

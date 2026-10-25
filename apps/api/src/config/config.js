@@ -8,9 +8,7 @@ const envVarsSchema = Joi.object()
   .keys({
     NODE_ENV: Joi.string().valid('production', 'development', 'test').default('development'),
     PORT: Joi.number().default(3000),
-    CLIENT_URL: Joi.string()
-  .default('http://localhost:5173')
-  .description('Frontend client URL for email links'),
+    CLIENT_URL: Joi.string().default('http://localhost:5173').description('Frontend client URL for email links'),
     MONGODB_URL: Joi.string().required().description('Mongo DB url'),
     JWT_SECRET: Joi.string().required().description('JWT secret key'),
     JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(30).description('minutes after which access tokens expire'),

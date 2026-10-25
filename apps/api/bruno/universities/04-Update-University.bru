@@ -1,0 +1,31 @@
+meta {
+  name: Update University (Admin)
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/universities/{{createdUniversityId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Balkh State University"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{createdUniversityId}}
+  res.body.name: eq Balkh State University
+}
+
+tests {
+  test("updates university name successfully", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.name).to.equal("Balkh State University");
+  });
+}

@@ -1,27 +1,13 @@
 const allRoles = {
-  student: [
-    'getTags',
-    'getInstitutions',
-    'createProject',
-    'manageOwnProject',
-    'submitProject',
-    'getNotifications',
-  ],
-  teacher: [
-    'getUsers',
-    'getTags',
-    'manageTags',
-    'getInstitutions',
-    'reviewProject',
-    'getNotifications',
-  ],
+  student: ['getTags', 'getUniversities', 'createProject', 'manageOwnProject', 'submitProject', 'getNotifications'],
+  teacher: ['getUsers', 'getTags', 'manageTags', 'getUniversities', 'reviewProject', 'getNotifications'],
   faculty_dean: [
     'getUsers',
     'manageUsers',
     'getTags',
     'manageTags',
-    'getInstitutions',
-    'manageInstitutions',
+    'getUniversities',
+    'manageUniversities',
     'assignSupervisor',
     'reviewProject',
     'publishProject',
@@ -32,8 +18,8 @@ const allRoles = {
     'manageUsers',
     'getTags',
     'manageTags',
-    'getInstitutions',
-    'manageInstitutions',
+    'getUniversities',
+    'manageUniversities',
     'createProject',
     'manageOwnProject',
     'submitProject',
@@ -51,5 +37,3 @@ module.exports = {
   roles,
   roleRights,
 };
-
-

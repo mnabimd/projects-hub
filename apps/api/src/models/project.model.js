@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { toJSON, paginate, publicId } = require('./plugins');
 
-const ObjectId = mongoose.Schema.Types.ObjectId;
+const { ObjectId } = mongoose.Schema.Types;
 
 // a copy of a team member basic information, embedded in each project
 const memberSchema = new mongoose.Schema(
@@ -120,7 +120,7 @@ const reviewSchema = new mongoose.Schema(
 
 const projectSchema = new mongoose.Schema(
   {
-    institutionId: {
+    universityId: {
       type: ObjectId,
       ref: 'University',
     },
@@ -150,13 +150,7 @@ const projectSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        'draft',
-        'submitted',
-        'revision_requested',
-        'approved',
-        'rejected',
-      ],
+      enum: ['draft', 'submitted', 'revision_requested', 'approved', 'rejected'],
       default: 'draft',
     },
 
