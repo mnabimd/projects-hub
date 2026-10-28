@@ -491,7 +491,7 @@ const seedDatabase = async () => {
         notificationDocs.push({
           userId: leaderStudent._id,
           projectId,
-          type: 'REJECTED',
+          type: 'REVISION',
           title: 'Revisions Requested for Project',
           message: `Revisions were requested for "${def.title}". Reviewer feedback: "${def.reviewFeedback}"`,
           isRead: false,
