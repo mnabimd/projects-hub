@@ -6,3 +6,4 @@ module.exports.tagService = require('./tag.service');
 module.exports.universityService = require('./university.service');
 module.exports.facultyService = require('./faculty.service');
 module.exports.otpService = require('./otp.service');
+module.exports.systemConfigService = require('./systemConfig.service');

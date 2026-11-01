@@ -3,3 +3,4 @@ module.exports.userController = require('./user.controller');
 module.exports.tagController = require('./tag.controller');
 module.exports.universityController = require('./university.controller');
 module.exports.facultyController = require('./faculty.controller');
+module.exports.systemController = require('./system.controller');

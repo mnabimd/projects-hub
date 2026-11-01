@@ -12,6 +12,7 @@ const { jwtStrategy } = require('./config/passport');
 const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
+const maintenanceMiddleware = require('./middlewares/maintenance');
 const ApiError = require('./utils/ApiError');
 
 const app = express();
@@ -49,6 +50,9 @@ passport.use('jwt', jwtStrategy);
 if (config.env === 'production') {
   app.use('/v1/auth', authLimiter);
 }
+
+// maintenance mode check
+app.use(maintenanceMiddleware);
 
 // v1 api routes
 app.use('/v1', routes);

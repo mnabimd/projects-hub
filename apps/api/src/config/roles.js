@@ -27,6 +27,7 @@ const allRoles = {
     'reviewProject',
     'publishProject',
     'getNotifications',
+    'manageSystem',
   ],
 };
 

@@ -2,6 +2,8 @@ const nodemailer = require('nodemailer');
 const config = require('../config/config');
 const logger = require('../config/logger');
 
+const systemConfigService = require('./systemConfig.service');
+
 const transport = nodemailer.createTransport(config.email.smtp);
 /* istanbul ignore next */
 if (config.env !== 'test') {
@@ -12,6 +14,38 @@ if (config.env !== 'test') {
 }
 
 /**
+ * Get dynamic email sender
+ * @returns {Promise<string>}
+ */
+const getSender = async () => {
+  try {
+    const systemConfig = await systemConfigService.getConfig();
+    if (systemConfig && systemConfig.emailSender && systemConfig.emailSender.fromAddress) {
+      return `"${systemConfig.emailSender.fromName || 'ProjectsHub'}" <${systemConfig.emailSender.fromAddress}>`;
+    }
+  } catch (err) {
+    // fallback to static config
+  }
+  return config.email.from;
+};
+
+/**
+ * Get dynamic client url
+ * @returns {Promise<string>}
+ */
+const getClientUrl = async () => {
+  try {
+    const systemConfig = await systemConfigService.getConfig();
+    if (systemConfig && systemConfig.clientUrl) {
+      return systemConfig.clientUrl;
+    }
+  } catch (err) {
+    // fallback to static config
+  }
+  return config.clientUrl;
+};
+
+/**
  * Send an email
  * @param {string} to
  * @param {string} subject
@@ -19,7 +53,8 @@ if (config.env !== 'test') {
  * @returns {Promise}
  */
 const sendEmail = async (to, subject, text) => {
-  const msg = { from: config.email.from, to, subject, text };
+  const from = await getSender();
+  const msg = { from, to, subject, text };
   await transport.sendMail(msg);
 };
 
@@ -30,9 +65,9 @@ const sendEmail = async (to, subject, text) => {
  * @returns {Promise}
  */
 const sendResetPasswordEmail = async (to, token) => {
+  const clientUrl = await getClientUrl();
   const subject = 'Reset password';
-  // replace this url with the link to the reset password page of your front-end app
-  const resetPasswordUrl = `${config.clientUrl}/reset-password?token=${token}`;
+  const resetPasswordUrl = `${clientUrl}/reset-password?token=${token}`;
   const text = `Dear user,
 To reset your password, click on this link: ${resetPasswordUrl}
 If you did not request any password resets, then ignore this email.`;
@@ -49,8 +84,9 @@ If you did not request any password resets, then ignore this email.`;
  */
 
 const sendVerificationEmail = async (to, token, otp) => {
+  const clientUrl = await getClientUrl();
   const subject = 'Email Verification';
-  const verificationEmailUrl = `${config.clientUrl}/verify-email?token=${token}`;
+  const verificationEmailUrl = `${clientUrl}/verify-email?token=${token}`;
 
   const otpText = otp
     ? `
@@ -69,9 +105,21 @@ If you did not create an account, ignore this email.`;
   await sendEmail(to, subject, text);
 };
 
+/**
+ * Send test email
+ * @param {string} to
+ * @returns {Promise}
+ */
+const sendTestEmail = async (to) => {
+  const subject = 'ProjectsHub - Test Email';
+  const text = 'This is a test email from ProjectsHub verifying your email sender settings.';
+  await sendEmail(to, subject, text);
+};
+
 module.exports = {
   transport,
   sendEmail,
   sendResetPasswordEmail,
   sendVerificationEmail,
+  sendTestEmail,
 };
