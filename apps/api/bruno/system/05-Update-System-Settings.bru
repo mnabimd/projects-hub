@@ -1,0 +1,54 @@
+meta {
+  name: Update System Settings (Super Admin)
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/system/settings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+body:json {
+  {
+    "supportEmail": "helpdesk@projectshub.com",
+    "maintenanceMode": false,
+    "maxFileSizeInMb": {
+      "monograph": 30,
+      "screenshot": 10
+    },
+    "emailSender": {
+      "fromName": "ProjectsHub Portal",
+      "fromAddress": "support@projectshub.com"
+    },
+    "appUpdates": {
+      "android": {
+        "latestVersion": "1.1.0",
+        "forceUpdate": false,
+        "releaseNotes": "Updated features and performance improvements"
+      }
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.supportEmail: eq helpdesk@projectshub.com
+  res.body.maxFileSizeInMb.monograph: eq 30
+  res.body.emailSender.fromName: eq ProjectsHub Portal
+}
+
+tests {
+  test("successfully updates global settings and hot-reloads", function() {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.supportEmail).to.equal("helpdesk@projectshub.com");
+    expect(body.maxFileSizeInMb.monograph).to.equal(30);
+    expect(body.emailSender.fromName).to.equal("ProjectsHub Portal");
+  });
+}

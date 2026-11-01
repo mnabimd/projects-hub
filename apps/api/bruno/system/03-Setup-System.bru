@@ -1,0 +1,81 @@
+meta {
+  name: First-Run Setup System (Bootstrap)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/system/setup
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "admin": {
+      "fullName": "System Administrator",
+      "email": "superadmin@projectshub.com",
+      "password": "Password123!"
+    },
+    "clientUrl": "http://localhost:5173",
+    "supportEmail": "support@projectshub.com",
+    "maintenanceMode": false,
+    "uploadDirectory": "uploads",
+    "maxFileSizeInMb": {
+      "monograph": 25,
+      "screenshot": 5
+    },
+    "emailSender": {
+      "fromName": "ProjectsHub",
+      "fromAddress": "no-reply@projectshub.com"
+    },
+    "appUpdates": {
+      "android": {
+        "minVersion": "1.0.0",
+        "latestVersion": "1.0.0",
+        "forceUpdate": false,
+        "updateUrl": "https://play.google.com/store/apps/details?id=com.projectshub.app",
+        "releaseNotes": "Initial system release"
+      },
+      "ios": {
+        "minVersion": "1.0.0",
+        "latestVersion": "1.0.0",
+        "forceUpdate": false,
+        "updateUrl": "https://apps.apple.com/app/id1234567890",
+        "releaseNotes": "Initial system release"
+      }
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    if (data.tokens && data.tokens.access) {
+      bru.setEnvVar("accessToken", data.tokens.access.token);
+      bru.setVar("accessToken", data.tokens.access.token);
+      bru.setEnvVar("adminAccessToken", data.tokens.access.token);
+      bru.setVar("adminAccessToken", data.tokens.access.token);
+    }
+    if (data.user && data.user.id) {
+      bru.setEnvVar("adminUserId", data.user.id);
+      bru.setVar("adminUserId", data.user.id);
+    }
+  }
+}
+
+assert {
+  res.status: in [201, 403]
+}
+
+tests {
+  test("setup response should be 201 Created on fresh install or 403 Forbidden if already initialized", function() {
+    expect([201, 403]).to.include(res.getStatus());
+    if (res.getStatus() === 201) {
+      const body = res.getBody();
+      expect(body.user.role).to.equal("super_admin");
+      expect(body.tokens.access.token).to.be.a("string");
+      expect(body.config.isInitialized).to.equal(true);
+    }
+  });
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Get Mobile App Updates
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/system/app-updates
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.android: isDefined
+  res.body.ios: isDefined
+}
+
+tests {
+  test("returns 200 with android and ios version rules", function() {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.android).to.have.property("minVersion");
+    expect(body.android).to.have.property("latestVersion");
+    expect(body.ios).to.have.property("minVersion");
+    expect(body.ios).to.have.property("latestVersion");
+  });
+}

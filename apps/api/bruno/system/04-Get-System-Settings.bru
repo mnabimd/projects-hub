@@ -1,0 +1,63 @@
+meta {
+  name: Get System Settings (Super Admin)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/system/settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+script:pre-request {
+  let token = bru.getVar("adminAccessToken") || bru.getEnvVar("adminAccessToken");
+  if (!token) {
+    try {
+      const axios = require('axios');
+      const baseUrl = bru.getEnvVar("baseUrl") || "http://localhost:4500/v1";
+      const adminEmail = bru.getEnvVar("adminEmail") || "admin@projectshub.com";
+      const adminPassword = bru.getEnvVar("adminPassword") || "Password123!";
+      let res;
+      try {
+        res = await axios.post(`${baseUrl}/auth/login`, { email: adminEmail, password: adminPassword });
+      } catch (e) {
+        res = await axios.post(`${baseUrl}/auth/login`, { email: "superadmin@projectshub.com", password: "Password123!" });
+      }
+      if (res && res.data && res.data.tokens) {
+        bru.setVar("adminAccessToken", res.data.tokens.access.token);
+        bru.setEnvVar("adminAccessToken", res.data.tokens.access.token);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.clientUrl: isDefined
+  res.body.supportEmail: isDefined
+  res.body.uploadDirectory: isDefined
+  res.body.maxFileSizeInMb: isDefined
+  res.body.emailSender: isDefined
+  res.body.appUpdates: isDefined
+}
+
+tests {
+  test("returns 200 and all global system settings for super admin", function() {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body).to.have.property("clientUrl");
+    expect(body).to.have.property("supportEmail");
+    expect(body).to.have.property("maintenanceMode");
+    expect(body).to.have.property("uploadDirectory");
+    expect(body).to.have.property("maxFileSizeInMb");
+    expect(body).to.have.property("emailSender");
+    expect(body).to.have.property("appUpdates");
+  });
+}

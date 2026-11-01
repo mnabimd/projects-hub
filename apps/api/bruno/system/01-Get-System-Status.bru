@@ -1,0 +1,27 @@
+meta {
+  name: Get System Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/system/status
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.isInitialized: isDefined
+  res.body.maintenanceMode: isDefined
+}
+
+tests {
+  test("returns 200 with system status", function() {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body).to.have.property("isInitialized");
+    expect(body).to.have.property("setupRequired");
+    expect(body).to.have.property("maintenanceMode");
+  });
+}
