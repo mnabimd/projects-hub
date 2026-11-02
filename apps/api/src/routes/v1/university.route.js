@@ -7,40 +7,18 @@ const requireEmailVerified = require('../../middlewares/requireEmailVerified');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .post(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(universityValidation.createUniversity),
-    universityController.createUniversity
-  )
-  .get(validate(universityValidation.getUniversities), universityController.getUniversities);
+// Public read routes (no auth or email verification needed)
+router.get('/', validate(universityValidation.getUniversities), universityController.getUniversities);
+router.get('/:universityId', validate(universityValidation.getUniversity), universityController.getUniversity);
+router.get('/:universityId/faculties', validate(facultyValidation.getFaculties), facultyController.getFaculties);
 
-router
-  .route('/:universityId')
-  .get(validate(universityValidation.getUniversity), universityController.getUniversity)
-  .patch(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(universityValidation.updateUniversity),
-    universityController.updateUniversity
-  )
-  .delete(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(universityValidation.deleteUniversity),
-    universityController.deleteUniversity
-  );
+// All write routes require auth + verified email
+router.use(auth('manageUniversities'));
+router.use(requireEmailVerified());
 
-router
-  .route('/:universityId/faculties')
-  .post(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(facultyValidation.createFaculty),
-    facultyController.createFaculty
-  )
-  .get(validate(facultyValidation.getFaculties), facultyController.getFaculties);
+router.post('/', validate(universityValidation.createUniversity), universityController.createUniversity);
+router.patch('/:universityId', validate(universityValidation.updateUniversity), universityController.updateUniversity);
+router.delete('/:universityId', validate(universityValidation.deleteUniversity), universityController.deleteUniversity);
+router.post('/:universityId/faculties', validate(facultyValidation.createFaculty), facultyController.createFaculty);
 
 module.exports = router;

@@ -8,7 +8,11 @@ const requireEmailVerified =
       return next();
     }
 
-    if (!req.user || !req.user.isEmailVerified) {
+    if (!req.user) {
+      return next(new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate'));
+    }
+
+    if (!req.user.isEmailVerified) {
       return next(new ApiError(httpStatus.FORBIDDEN, 'Please verify your email before accessing this resource'));
     }
 

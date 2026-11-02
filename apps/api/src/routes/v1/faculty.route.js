@@ -7,38 +7,20 @@ const requireEmailVerified = require('../../middlewares/requireEmailVerified');
 
 const router = express.Router();
 
-router
-  .route('/:facultyId')
-  .get(validate(facultyValidation.getFaculty), facultyController.getFaculty)
-  .patch(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(facultyValidation.updateFaculty),
-    facultyController.updateFaculty
-  )
-  .delete(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(facultyValidation.deleteFaculty),
-    facultyController.deleteFaculty
-  );
+// Public read route (no auth needed)
+router.get('/:facultyId', validate(facultyValidation.getFaculty), facultyController.getFaculty);
 
-router
-  .route('/:facultyId/departments')
-  .post(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(facultyValidation.createDepartment),
-    facultyController.addDepartment
-  );
+// All write routes require auth + verified email
+router.use(auth('manageUniversities'));
+router.use(requireEmailVerified());
 
-router
-  .route('/:facultyId/departments/:departmentId')
-  .delete(
-    auth('manageUniversities'),
-    requireEmailVerified(),
-    validate(facultyValidation.deleteDepartment),
-    facultyController.removeDepartment
-  );
+router.patch('/:facultyId', validate(facultyValidation.updateFaculty), facultyController.updateFaculty);
+router.delete('/:facultyId', validate(facultyValidation.deleteFaculty), facultyController.deleteFaculty);
+router.post('/:facultyId/departments', validate(facultyValidation.createDepartment), facultyController.addDepartment);
+router.delete(
+  '/:facultyId/departments/:departmentId',
+  validate(facultyValidation.deleteDepartment),
+  facultyController.removeDepartment
+);
 
 module.exports = router;

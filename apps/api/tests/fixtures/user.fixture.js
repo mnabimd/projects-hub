@@ -13,7 +13,7 @@ const userOne = {
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'student',
-  isEmailVerified: false,
+  isEmailVerified: true,
 };
 Object.defineProperty(userOne, 'name', {
   get() {
@@ -30,7 +30,7 @@ const userTwo = {
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'student',
-  isEmailVerified: false,
+  isEmailVerified: true,
 };
 Object.defineProperty(userTwo, 'name', {
   get() {
@@ -47,8 +47,45 @@ const admin = {
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'super_admin',
+  isEmailVerified: true,
+};
+
+// A student whose email is NOT verified — used to test requireEmailVerified guard.
+const unverifiedUser = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'student',
   isEmailVerified: false,
 };
+Object.defineProperty(unverifiedUser, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
+// A super_admin whose email is NOT verified — used to test that email verification gates even privileged roles.
+const unverifiedAdmin = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'super_admin',
+  isEmailVerified: false,
+};
+Object.defineProperty(unverifiedAdmin, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
 Object.defineProperty(admin, 'name', {
   get() {
     return this.fullName;
@@ -63,7 +100,10 @@ const insertUsers = async (users) => {
     users.map((user) => ({
       ...user,
       fullName: user.fullName || user.name,
-      isEmailVerified: user.isEmailVerified !== undefined ? user.isEmailVerified : false,
+      // Preserve the explicit isEmailVerified value; fall back to true so that
+      // general-purpose fixtures (userOne, userTwo, admin) don't get blocked by
+      // requireEmailVerified on routes that are unrelated to email-verification.
+      isEmailVerified: user.isEmailVerified !== undefined ? user.isEmailVerified : true,
       passwordHash: hashedPassword,
     }))
   );
@@ -73,5 +113,7 @@ module.exports = {
   userOne,
   userTwo,
   admin,
+  unverifiedUser,
+  unverifiedAdmin,
   insertUsers,
 };

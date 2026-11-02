@@ -57,7 +57,7 @@ const sendVerificationEmail = async (to, token, otp) => {
 
 Or enter this verification code in the app: ${otp}
 
-This code expires in ${config.jwt.verifyEmailExpirationMinutes} minutes.`
+This code expires in ${config.otp.expirationMinutes} minutes.`
     : '';
 
   const text = `Dear user,
