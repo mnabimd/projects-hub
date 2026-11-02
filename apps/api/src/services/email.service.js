@@ -43,15 +43,29 @@ If you did not request any password resets, then ignore this email.`;
  * Send verification email
  * @param {string} to
  * @param {string} token
+ * @param {string} otp
  * @returns {Promise}
+ *
  */
-const sendVerificationEmail = async (to, token) => {
+
+const sendVerificationEmail = async (to, token, otp) => {
   const subject = 'Email Verification';
-  // replace this url with the link to the email verification page of your front-end app
   const verificationEmailUrl = `${config.clientUrl}/verify-email?token=${token}`;
+
+  const otpText = otp
+    ? `
+
+Or enter this verification code in the app: ${otp}
+
+This code expires in ${config.jwt.verifyEmailExpirationMinutes} minutes.`
+    : '';
+
   const text = `Dear user,
-To verify your email, click on this link: ${verificationEmailUrl}
-If you did not create an account, then ignore this email.`;
+
+To verify your email, click on this link: ${verificationEmailUrl}${otpText}
+
+If you did not create an account, ignore this email.`;
+
   await sendEmail(to, subject, text);
 };
 

@@ -8,3 +8,4 @@ module.exports.Faculty = require('./faculty.model');
 module.exports.TechnologyTag = require('./technologyTag.model');
 module.exports.Project = require('./project.model');
 module.exports.Notification = require('./notification.model');
+module.exports.EmailOtp = require('./emailOtp.model');
