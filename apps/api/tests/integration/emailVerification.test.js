@@ -1,13 +1,10 @@
 const request = require('supertest');
 const httpStatus = require('http-status');
-const mongoose = require('mongoose');
+require('mongoose');
 const app = require('../../src/app');
 const setupTestDB = require('../utils/setupTestDB');
 const { userOne, unverifiedUser, unverifiedAdmin, insertUsers } = require('../fixtures/user.fixture');
-const {
-  unverifiedUserAccessToken,
-  unverifiedAdminAccessToken,
-} = require('../fixtures/token.fixture');
+const { unverifiedUserAccessToken, unverifiedAdminAccessToken } = require('../fixtures/token.fixture');
 const { universityOne, insertUniversities } = require('../fixtures/university.fixture');
 const { tagOne, insertTags } = require('../fixtures/tag.fixture');
 
