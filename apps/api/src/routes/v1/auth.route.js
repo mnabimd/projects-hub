@@ -14,6 +14,7 @@ router.post('/forgot-password', validate(authValidation.forgotPassword), authCon
 router.post('/reset-password', validate(authValidation.resetPassword), authController.resetPassword);
 router.post('/send-verification-email', auth(), authController.sendVerificationEmail);
 router.post('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
+router.post('/verify-email-otp', auth(), validate(authValidation.verifyEmailOtp), authController.verifyEmailWithOtp);
 
 module.exports = router;
 
@@ -29,6 +30,7 @@ module.exports = router;
  * /auth/register:
  *   post:
  *     summary: Register as user
+ *     description: Creates an account and attempts to send a verification email containing both a magic link and OTP.
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -252,7 +254,7 @@ module.exports = router;
  * /auth/send-verification-email:
  *   post:
  *     summary: Send verification email
- *     description: An email will be sent to verify email.
+ *     description: Sends a fresh magic link and six-digit OTP to the authenticated user's email.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -288,4 +290,39 @@ module.exports = router;
  *             example:
  *               code: 401
  *               message: verify email failed
+ */
+
+/**
+ * @swagger
+ * /auth/verify-email-otp:
+ *   post:
+ *     summary: Verify email using a six-digit OTP
+ *     description: Verify the authenticated user's email using the OTP sent by email.
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 minLength: 6
+ *                 maxLength: 6
+ *                 pattern: '^[0-9]{6}$'
+ *                 example: '038471'
+ *     responses:
+ *       "204":
+ *         description: Email verified successfully
+ *       "400":
+ *         description: Invalid or expired OTP
+ *       "401":
+ *         $ref: '#/components/responses/Unauthorized'
+ *       "429":
+ *         description: Too many incorrect attempts. Request a new verification code.
  */

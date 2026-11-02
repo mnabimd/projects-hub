@@ -3,18 +3,19 @@ const auth = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
 const { tagValidation } = require('../../validations');
 const { tagController } = require('../../controllers');
+const requireEmailVerified = require('../../middlewares/requireEmailVerified');
 
 const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageTags'), validate(tagValidation.createTag), tagController.createTag)
+  .post(auth('manageTags'), requireEmailVerified(), validate(tagValidation.createTag), tagController.createTag)
   .get(validate(tagValidation.getTags), tagController.getTags);
 
 router
   .route('/:tagId')
   .get(validate(tagValidation.getTag), tagController.getTag)
-  .delete(auth('manageTags'), validate(tagValidation.deleteTag), tagController.deleteTag);
+  .delete(auth('manageTags'), requireEmailVerified(), validate(tagValidation.deleteTag), tagController.deleteTag);
 
 module.exports = router;
 

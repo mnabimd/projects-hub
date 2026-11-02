@@ -49,6 +49,15 @@ const verifyEmail = {
   }),
 };
 
+const verifyEmailOtp = {
+  body: Joi.object().keys({
+    otp: Joi.string()
+      .required()
+      .length(6)
+      .pattern(/^\d{6}$/),
+  }),
+};
+
 module.exports = {
   register,
   login,
@@ -57,4 +66,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  verifyEmailOtp,
 };
