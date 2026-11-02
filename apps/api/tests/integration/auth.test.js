@@ -18,6 +18,10 @@ const { userOneAccessToken, adminAccessToken } = require('../fixtures/token.fixt
 setupTestDB();
 
 describe('Auth routes', () => {
+  beforeEach(() => {
+    jest.spyOn(emailService.transport, 'sendMail').mockResolvedValue();
+  });
+
   describe('POST /v1/auth/register', () => {
     let newUser;
     beforeEach(() => {
@@ -374,7 +378,7 @@ describe('Auth routes', () => {
         .set('Authorization', `Bearer ${userOneAccessToken}`)
         .expect(httpStatus.NO_CONTENT);
 
-      expect(sendVerificationEmailSpy).toHaveBeenCalledWith(userOne.email, expect.any(String));
+      expect(sendVerificationEmailSpy).toHaveBeenCalledWith(userOne.email, expect.any(String), expect.any(String));
       const verifyEmailToken = sendVerificationEmailSpy.mock.calls[0][1];
       const dbVerifyEmailToken = await Token.findOne({ token: verifyEmailToken, user: userOne._id });
 

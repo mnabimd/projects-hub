@@ -7,15 +7,16 @@ const requireEmailVerified = require('../../middlewares/requireEmailVerified');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .post(auth('manageTags'), requireEmailVerified(), validate(tagValidation.createTag), tagController.createTag)
-  .get(validate(tagValidation.getTags), tagController.getTags);
+// Public read routes
+router.get('/', validate(tagValidation.getTags), tagController.getTags);
+router.get('/:tagId', validate(tagValidation.getTag), tagController.getTag);
 
-router
-  .route('/:tagId')
-  .get(validate(tagValidation.getTag), tagController.getTag)
-  .delete(auth('manageTags'), requireEmailVerified(), validate(tagValidation.deleteTag), tagController.deleteTag);
+// All write routes require auth + verified email
+router.use(auth('manageTags'));
+router.use(requireEmailVerified());
+
+router.post('/', validate(tagValidation.createTag), tagController.createTag);
+router.delete('/:tagId', validate(tagValidation.deleteTag), tagController.deleteTag);
 
 module.exports = router;
 

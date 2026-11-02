@@ -504,7 +504,7 @@ describe('User routes', () => {
         fullName: updateBody.fullName,
         email: updateBody.email,
         role: 'student',
-        isEmailVerified: false,
+        isEmailVerified: userOne.isEmailVerified,
       });
 
       const dbUser = await User.findById(userOne._id);

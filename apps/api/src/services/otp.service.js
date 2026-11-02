@@ -8,23 +8,21 @@ const ApiError = require('../utils/ApiError');
 
 const MAX_OTP_ATTEMPTS = 5;
 
-const generateOtpCode = () => {
-  return crypto.randomInt(0, 1000000).toString().padStart(6, '0');
-};
+// Produces a uniformly-random 6-digit code with no leading zeros (100000–999999)
+const generateOtpCode = () => crypto.randomInt(100000, 1000000).toString();
 
 const createEmailOtp = async (userId) => {
-  // Remove old OTPs so the user only has one active code.
-  await EmailOtp.deleteMany({ user: userId });
-
   const plainOtp = generateOtpCode();
   const otpHash = await EmailOtp.hashOtp(plainOtp);
-  const expires = moment().add(config.jwt.verifyEmailExpirationMinutes, 'minutes').toDate();
+  const expires = moment().add(config.otp.expirationMinutes, 'minutes').toDate();
 
-  await EmailOtp.create({
-    user: userId,
-    otpHash,
-    expires,
-  });
+  // Atomic upsert — replaces any existing OTP in a single DB operation,
+  // avoiding the race condition of a separate deleteMany + create.
+  await EmailOtp.findOneAndReplace(
+    { user: userId },
+    { user: userId, otpHash, expires, attempts: 0, createdAt: new Date() },
+    { upsert: true }
+  );
 
   return plainOtp;
 };
@@ -69,7 +67,6 @@ const verifyEmailOtp = async (userId, otp) => {
 };
 
 module.exports = {
-  generateOtpCode,
   createEmailOtp,
   verifyEmailOtp,
 };
