@@ -10,13 +10,13 @@ const projectSchema = mongoose.Schema({
 });
 
 projectSchema.virtual('tasks', {
-  ref: 'Task',
+  ref: 'PaginateTask',
   localField: '_id',
   foreignField: 'project',
 });
 
 projectSchema.plugin(paginate);
-const Project = mongoose.model('Project', projectSchema);
+const Project = mongoose.models.PaginateProject || mongoose.model('PaginateProject', projectSchema);
 
 const taskSchema = mongoose.Schema({
   name: {
@@ -25,13 +25,13 @@ const taskSchema = mongoose.Schema({
   },
   project: {
     type: mongoose.SchemaTypes.ObjectId,
-    ref: 'Project',
+    ref: 'PaginateProject',
     required: true,
   },
 });
 
 taskSchema.plugin(paginate);
-const Task = mongoose.model('Task', taskSchema);
+const Task = mongoose.models.PaginateTask || mongoose.model('PaginateTask', taskSchema);
 
 setupTestDB();
 

@@ -5,14 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/auth/register
+  url: {{baseUrl}}/auth/login
   body: json
   auth: none
 }
 
 body:json {
   {
-    "name": "Invalid User",
     "email": "not-an-email",
     "password": "123"
   }

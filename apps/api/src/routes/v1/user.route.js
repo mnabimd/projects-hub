@@ -32,7 +32,7 @@ module.exports = router;
  * /users:
  *   post:
  *     summary: Create a user
- *     description: Only admins can create other users.
+ *     description: Authenticated academic administrators can provision subordinate users according to the role hierarchy and institutional scope.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -43,12 +43,12 @@ module.exports = router;
  *           schema:
  *             type: object
  *             required:
- *               - name
+ *               - fullName
  *               - email
  *               - password
  *               - role
  *             properties:
- *               name:
+ *               fullName:
  *                 type: string
  *               email:
  *                 type: string
@@ -60,13 +60,26 @@ module.exports = router;
  *                 minLength: 8
  *                 description: At least one number and one letter
  *               role:
- *                  type: string
- *                  enum: [user, admin]
+ *                 type: string
+ *                 enum: [admin, faculty_dean, department_head, teacher, student]
+ *               universityId:
+ *                 type: string
+ *                 description: MongoDB ObjectId referencing University
+ *               facultyId:
+ *                 type: string
+ *                 description: MongoDB ObjectId referencing Faculty
+ *               departmentId:
+ *                 type: string
+ *                 description: MongoDB ObjectId referencing embedded Department
+ *               studentId:
+ *                 type: string
+ *                 description: Required when role is student; unique within university
  *             example:
- *               name: fake name
- *               email: fake@example.com
+ *               fullName: Ahmad Rahimi
+ *               email: ahmad.rahimi@ku.edu.af
  *               password: password1
- *               role: user
+ *               role: student
+ *               studentId: "2023-CS-101"
  *     responses:
  *       "201":
  *         description: Created
@@ -75,7 +88,7 @@ module.exports = router;
  *             schema:
  *                $ref: '#/components/schemas/User'
  *       "400":
- *         $ref: '#/components/responses/DuplicateEmail'
+ *         description: Validation error or referential integrity failure
  *       "401":
  *         $ref: '#/components/responses/Unauthorized'
  *       "403":

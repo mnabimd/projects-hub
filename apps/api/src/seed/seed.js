@@ -298,7 +298,20 @@ const seedDatabase = async () => {
       mustChangePassword: false,
     });
 
-    // 4b. Faculty Deans
+    // 4b. University Administrators
+    insertedUniversities.forEach((university) => {
+      const uniPrefix = university.domain.split('.')[0];
+      userDocs.push({
+        universityId: university._id,
+        fullName: `${university.name} Administrator`,
+        email: `admin.${uniPrefix}@${university.domain}`,
+        passwordHash: defaultPasswordHash,
+        role: 'admin',
+        mustChangePassword: false,
+      });
+    });
+
+    // 4c. Faculty Deans
     insertedFaculties.forEach((faculty) => {
       const university = insertedUniversities.find((u) => u._id.equals(faculty.universityId));
       const facultyPrefix = faculty.name.includes('Computer') ? 'cs' : 'eng';
@@ -314,7 +327,7 @@ const seedDatabase = async () => {
       });
     });
 
-    // 4c. Teachers and Students per Department
+    // 4d. Department Heads, Teachers, and Students per Department
     const departmentContexts = [];
     insertedFaculties.forEach((faculty) => {
       const university = insertedUniversities.find((u) => u._id.equals(faculty.universityId));
@@ -335,6 +348,20 @@ const seedDatabase = async () => {
       const deptKey = ctx.department._id.toString();
       teachersByDept[deptKey] = [];
       studentsByDept[deptKey] = [];
+
+      // Create 1 Department Head per department
+      const headDoc = {
+        _id: mongoose.Types.ObjectId(),
+        universityId: ctx.university._id,
+        facultyId: ctx.faculty._id,
+        departmentId: ctx.department._id,
+        fullName: `Dr. ${faker.name.firstName()} ${faker.name.lastName()} (HOD)`,
+        email: `hod_${ctx.department.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}@${ctx.university.domain}`,
+        passwordHash: defaultPasswordHash,
+        role: 'department_head',
+        mustChangePassword: false,
+      };
+      userDocs.push(headDoc);
 
       // Create 2 Teachers per department
       for (let t = 1; t <= 2; t += 1) {

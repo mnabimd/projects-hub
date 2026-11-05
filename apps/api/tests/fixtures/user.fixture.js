@@ -95,6 +95,109 @@ Object.defineProperty(admin, 'name', {
   },
 });
 
+const { universityOne } = require('./university.fixture');
+const { facultyOne } = require('./faculty.fixture');
+
+const superAdmin = admin;
+
+const institutionAdmin = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'admin',
+  universityId: universityOne._id,
+  isEmailVerified: true,
+};
+Object.defineProperty(institutionAdmin, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
+const facultyDeanUser = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'faculty_dean',
+  universityId: universityOne._id,
+  facultyId: facultyOne._id,
+  isEmailVerified: true,
+};
+Object.defineProperty(facultyDeanUser, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
+const departmentHeadUser = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'department_head',
+  universityId: universityOne._id,
+  facultyId: facultyOne._id,
+  departmentId: facultyOne.departments[0]._id,
+  isEmailVerified: true,
+};
+Object.defineProperty(departmentHeadUser, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
+const teacherUser = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'teacher',
+  universityId: universityOne._id,
+  facultyId: facultyOne._id,
+  departmentId: facultyOne.departments[0]._id,
+  isEmailVerified: true,
+};
+Object.defineProperty(teacherUser, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
+const studentUser = {
+  _id: mongoose.Types.ObjectId(),
+  fullName: faker.name.findName(),
+  email: faker.internet.email().toLowerCase(),
+  password,
+  role: 'student',
+  universityId: universityOne._id,
+  facultyId: facultyOne._id,
+  departmentId: facultyOne.departments[0]._id,
+  studentId: '2023-CS-001',
+  isEmailVerified: true,
+};
+Object.defineProperty(studentUser, 'name', {
+  get() {
+    return this.fullName;
+  },
+  set(val) {
+    this.fullName = val;
+  },
+});
+
 const insertUsers = async (users) => {
   await User.insertMany(
     users.map((user) => ({
@@ -113,6 +216,12 @@ module.exports = {
   userOne,
   userTwo,
   admin,
+  superAdmin,
+  institutionAdmin,
+  facultyDeanUser,
+  departmentHeadUser,
+  teacherUser,
+  studentUser,
   unverifiedUser,
   unverifiedAdmin,
   insertUsers,

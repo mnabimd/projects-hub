@@ -7,9 +7,15 @@ const createUser = {
     email: Joi.string().required().email(),
     password: Joi.string().required().custom(password),
     fullName: Joi.string().required(),
-    role: Joi.string()
-      .required()
-      .valid(...roles),
+    role: Joi.string().required().valid('admin', 'faculty_dean', 'department_head', 'teacher', 'student'),
+    universityId: Joi.string().custom(objectId),
+    facultyId: Joi.string().custom(objectId),
+    departmentId: Joi.string().custom(objectId),
+    studentId: Joi.string().trim().when('role', {
+      is: 'student',
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
   }),
 };
 

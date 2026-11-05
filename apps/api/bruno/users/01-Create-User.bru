@@ -15,7 +15,11 @@ body:json {
     "fullName": "New Student",
     "email": "student1@gmail.com",
     "password": "password1",
-    "role": "student"
+    "role": "student",
+    "universityId": "{{universityId}}",
+    "facultyId": "{{facultyId}}",
+    "departmentId": "{{departmentId}}",
+    "studentId": "2023-CS-001"
   }
 }
 
@@ -23,7 +27,7 @@ assert {
   res.status: eq 201
   res.body.id: isDefined
   res.body.email: isDefined
-  res.body.role: eq user
+  res.body.role: eq student
 }
 
 
@@ -40,7 +44,7 @@ tests {
   test("creates user with correct role and returns no password field", function() {
     const body = res.getBody();
     expect(res.getStatus()).to.equal(201);
-    expect(body.role).to.equal("user");
+    expect(body.role).to.equal("student");
     expect(body.password).to.be.undefined;
   });
 }

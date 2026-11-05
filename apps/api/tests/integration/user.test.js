@@ -1,11 +1,34 @@
 const request = require('supertest');
 const faker = require('faker');
 const httpStatus = require('http-status');
+const mongoose = require('mongoose');
 const app = require('../../src/app');
 const setupTestDB = require('../utils/setupTestDB');
 const { User } = require('../../src/models');
-const { userOne, userTwo, admin, insertUsers } = require('../fixtures/user.fixture');
-const { userOneAccessToken, adminAccessToken } = require('../fixtures/token.fixture');
+const {
+  userOne,
+  userTwo,
+  admin,
+  superAdmin,
+  institutionAdmin,
+  facultyDeanUser,
+  departmentHeadUser,
+  teacherUser,
+  studentUser,
+  insertUsers,
+} = require('../fixtures/user.fixture');
+const {
+  userOneAccessToken,
+  adminAccessToken,
+  superAdminAccessToken,
+  institutionAdminAccessToken,
+  facultyDeanAccessToken,
+  departmentHeadAccessToken,
+  teacherAccessToken,
+  studentAccessToken,
+} = require('../fixtures/token.fixture');
+const { universityOne, universityTwo, insertUniversities } = require('../fixtures/university.fixture');
+const { facultyOne, facultyTwo, insertFaculties } = require('../fixtures/faculty.fixture');
 
 setupTestDB();
 
@@ -13,12 +36,16 @@ describe('User routes', () => {
   describe('POST /v1/users', () => {
     let newUser;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await insertUniversities([universityOne, universityTwo]);
+      await insertFaculties([facultyOne, facultyTwo]);
+
       newUser = {
         fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
-        role: 'student',
+        role: 'admin',
+        universityId: universityOne._id,
       };
     });
 
@@ -32,6 +59,7 @@ describe('User routes', () => {
         .expect(httpStatus.CREATED);
 
       expect(res.body).not.toHaveProperty('password');
+      expect(res.body).not.toHaveProperty('passwordHash');
       expect(res.body).toMatchObject({
         id: expect.anything(),
         fullName: newUser.fullName,
@@ -51,27 +79,11 @@ describe('User routes', () => {
       });
     });
 
-    test('should be able to create an admin as well', async () => {
-      await insertUsers([admin]);
-      newUser.role = 'super_admin';
-
-      const res = await request(app)
-        .post('/v1/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send(newUser)
-        .expect(httpStatus.CREATED);
-
-      expect(res.body.role).toBe('super_admin');
-
-      const dbUser = await User.findById(res.body.id);
-      expect(dbUser.role).toBe('super_admin');
-    });
-
     test('should return 401 error if access token is missing', async () => {
       await request(app).post('/v1/users').send(newUser).expect(httpStatus.UNAUTHORIZED);
     });
 
-    test('should return 403 error if logged in user is not admin', async () => {
+    test('should return 403 error if logged in user is student', async () => {
       await insertUsers([userOne]);
 
       await request(app)
@@ -133,7 +145,7 @@ describe('User routes', () => {
         .expect(httpStatus.BAD_REQUEST);
     });
 
-    test('should return 400 error if role is neither user nor admin', async () => {
+    test('should return 400 error if role is invalid', async () => {
       await insertUsers([admin]);
       newUser.role = 'invalid';
 
@@ -141,6 +153,388 @@ describe('User routes', () => {
         .post('/v1/users')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send(newUser)
+        .expect(httpStatus.BAD_REQUEST);
+    });
+
+    // =========================================================================
+    // 15 Hierarchical Provisioning Scenarios
+    // =========================================================================
+
+    // Scenario 1: super_admin creates admin with valid universityId
+    test('Scenario 1: super_admin can create admin with valid universityId (201 Created)', async () => {
+      await insertUsers([superAdmin]);
+      const targetUser = {
+        fullName: faker.name.findName(),
+        email: faker.internet.email().toLowerCase(),
+        password: 'password1',
+        role: 'admin',
+        universityId: universityOne._id,
+      };
+
+      const res = await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${superAdminAccessToken}`)
+        .send(targetUser)
+        .expect(httpStatus.CREATED);
+
+      expect(res.body.role).toBe('admin');
+      expect(res.body.universityId).toBe(universityOne._id.toHexString());
+    });
+
+    // Scenario 2: super_admin cannot create super_admin via /v1/users
+    test('Scenario 2: super_admin cannot create super_admin via /v1/users (400 Bad Request)', async () => {
+      await insertUsers([superAdmin]);
+      const targetUser = {
+        fullName: faker.name.findName(),
+        email: faker.internet.email().toLowerCase(),
+        password: 'password1',
+        role: 'super_admin',
+      };
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${superAdminAccessToken}`)
+        .send(targetUser)
+        .expect(httpStatus.BAD_REQUEST);
+    });
+
+    // Scenario 3: super_admin creates student without universityId
+    test('Scenario 3: super_admin cannot create student without universityId (400 Bad Request)', async () => {
+      await insertUsers([superAdmin]);
+      const targetUser = {
+        fullName: faker.name.findName(),
+        email: faker.internet.email().toLowerCase(),
+        password: 'password1',
+        role: 'student',
+        facultyId: facultyOne._id,
+        departmentId: facultyOne.departments[0]._id,
+        studentId: '2023-CS-999',
+      };
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${superAdminAccessToken}`)
+        .send(targetUser)
+        .expect(httpStatus.BAD_REQUEST);
+    });
+
+    // Scenario 4: admin creates faculty_dean in own university
+    test('Scenario 4: admin can create faculty_dean in own university (201 Created, inherits universityId)', async () => {
+      await insertUsers([institutionAdmin]);
+      const targetUser = {
+        fullName: faker.name.findName(),
+        email: faker.internet.email().toLowerCase(),
+        password: 'password1',
+        role: 'faculty_dean',
+        facultyId: facultyOne._id,
+      };
+
+      const res = await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${institutionAdminAccessToken}`)
+        .send(targetUser)
+        .expect(httpStatus.CREATED);
+
+      expect(res.body.role).toBe('faculty_dean');
+      expect(res.body.universityId).toBe(institutionAdmin.universityId.toHexString());
+      expect(res.body.facultyId).toBe(facultyOne._id.toHexString());
+    });
+
+    // Scenario 5: admin creates faculty_dean with different universityId
+    test('Scenario 5: admin cannot create faculty_dean targeting different universityId (403 Forbidden)', async () => {
+      await insertUsers([institutionAdmin]);
+      const targetUser = {
+        fullName: faker.name.findName(),
+        email: faker.internet.email().toLowerCase(),
+        password: 'password1',
+        role: 'faculty_dean',
+        universityId: universityTwo._id,
+        facultyId: facultyOne._id,
+      };
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${institutionAdminAccessToken}`)
+        .send(targetUser)
+        .expect(httpStatus.FORBIDDEN);
+    });
+
+    // Scenario 6: admin creates admin or super_admin
+    test('Scenario 6: admin cannot create admin (403 Forbidden) or super_admin (400 Bad Request)', async () => {
+      await insertUsers([institutionAdmin]);
+
+      // Attempting to create admin
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${institutionAdminAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'admin',
+        })
+        .expect(httpStatus.FORBIDDEN);
+
+      // Attempting to create super_admin
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${institutionAdminAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'super_admin',
+        })
+        .expect(httpStatus.BAD_REQUEST);
+    });
+
+    // Scenario 7: faculty_dean creates department_head in own faculty
+    test('Scenario 7: faculty_dean can create department_head in own faculty (201 Created)', async () => {
+      await insertUsers([facultyDeanUser]);
+      const targetUser = {
+        fullName: faker.name.findName(),
+        email: faker.internet.email().toLowerCase(),
+        password: 'password1',
+        role: 'department_head',
+        departmentId: facultyOne.departments[0]._id,
+      };
+
+      const res = await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${facultyDeanAccessToken}`)
+        .send(targetUser)
+        .expect(httpStatus.CREATED);
+
+      expect(res.body.role).toBe('department_head');
+      expect(res.body.universityId).toBe(facultyDeanUser.universityId.toHexString());
+      expect(res.body.facultyId).toBe(facultyDeanUser.facultyId.toHexString());
+      expect(res.body.departmentId).toBe(facultyOne.departments[0]._id.toHexString());
+    });
+
+    // Scenario 8: faculty_dean creates faculty_dean or admin
+    test('Scenario 8: faculty_dean cannot create faculty_dean or admin (403 Forbidden)', async () => {
+      await insertUsers([facultyDeanUser]);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${facultyDeanAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'faculty_dean',
+          facultyId: facultyOne._id,
+        })
+        .expect(httpStatus.FORBIDDEN);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${facultyDeanAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'admin',
+        })
+        .expect(httpStatus.FORBIDDEN);
+    });
+
+    // Scenario 9: faculty_dean creates user targeting different faculty
+    test('Scenario 9: faculty_dean cannot create user targeting different faculty (403 Forbidden)', async () => {
+      await insertUsers([facultyDeanUser]);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${facultyDeanAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'teacher',
+          facultyId: facultyTwo._id,
+        })
+        .expect(httpStatus.FORBIDDEN);
+    });
+
+    // Scenario 10: department_head creates teacher and student in own department
+    test('Scenario 10: department_head can create teacher and student in own department (201 Created)', async () => {
+      await insertUsers([departmentHeadUser]);
+
+      // Create teacher
+      const teacherRes = await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: 'Prof. Tester',
+          email: 'teacher.dept@ku.edu.af',
+          password: 'password1',
+          role: 'teacher',
+        })
+        .expect(httpStatus.CREATED);
+
+      expect(teacherRes.body.role).toBe('teacher');
+      expect(teacherRes.body.universityId).toBe(departmentHeadUser.universityId.toHexString());
+      expect(teacherRes.body.facultyId).toBe(departmentHeadUser.facultyId.toHexString());
+      expect(teacherRes.body.departmentId).toBe(departmentHeadUser.departmentId.toHexString());
+
+      // Create student
+      const studentRes = await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: 'Student Tester',
+          email: 'student.dept@ku.edu.af',
+          password: 'password1',
+          role: 'student',
+          studentId: '2023-CS-002',
+        })
+        .expect(httpStatus.CREATED);
+
+      expect(studentRes.body.role).toBe('student');
+      expect(studentRes.body.studentId).toBe('2023-CS-002');
+      expect(studentRes.body.universityId).toBe(departmentHeadUser.universityId.toHexString());
+      expect(studentRes.body.facultyId).toBe(departmentHeadUser.facultyId.toHexString());
+      expect(studentRes.body.departmentId).toBe(departmentHeadUser.departmentId.toHexString());
+    });
+
+    // Scenario 11: department_head creates administrative role (dean, admin)
+    test('Scenario 11: department_head cannot create administrative role (403 Forbidden)', async () => {
+      await insertUsers([departmentHeadUser]);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'faculty_dean',
+          facultyId: facultyOne._id,
+        })
+        .expect(httpStatus.FORBIDDEN);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'admin',
+        })
+        .expect(httpStatus.FORBIDDEN);
+    });
+
+    // Scenario 12: department_head creates user targeting different department
+    test('Scenario 12: department_head cannot create user targeting different department (403 Forbidden)', async () => {
+      await insertUsers([departmentHeadUser]);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'teacher',
+          departmentId: facultyOne.departments[1]._id,
+        })
+        .expect(httpStatus.FORBIDDEN);
+    });
+
+    // Scenario 13: teacher / student calls POST /v1/users
+    test('Scenario 13: teacher or student cannot call POST /v1/users (403 Forbidden)', async () => {
+      await insertUsers([teacherUser, studentUser]);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${teacherAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'student',
+          studentId: '2023-CS-003',
+        })
+        .expect(httpStatus.FORBIDDEN);
+
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${studentAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'student',
+          studentId: '2023-CS-004',
+        })
+        .expect(httpStatus.FORBIDDEN);
+    });
+
+    // Scenario 14: Duplicate studentId within same university
+    test('Scenario 14: cannot create student with duplicate studentId in same university (400 Bad Request)', async () => {
+      await insertUsers([departmentHeadUser]);
+
+      // First student
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: 'Student Original',
+          email: 'orig@ku.edu.af',
+          password: 'password1',
+          role: 'student',
+          studentId: '2023-CS-DUP',
+        })
+        .expect(httpStatus.CREATED);
+
+      // Duplicate studentId in same university
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
+        .send({
+          fullName: 'Student Duplicate',
+          email: 'dup@ku.edu.af',
+          password: 'password1',
+          role: 'student',
+          studentId: '2023-CS-DUP',
+        })
+        .expect(httpStatus.BAD_REQUEST);
+    });
+
+    // Scenario 15: Create user with non-existent facultyId or departmentId
+    test('Scenario 15: cannot create user with non-existent facultyId or departmentId (400 Bad Request)', async () => {
+      await insertUsers([superAdmin]);
+      const nonExistentId = mongoose.Types.ObjectId();
+
+      // Non-existent facultyId
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${superAdminAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'teacher',
+          universityId: universityOne._id,
+          facultyId: nonExistentId,
+        })
+        .expect(httpStatus.BAD_REQUEST);
+
+      // Non-existent departmentId
+      await request(app)
+        .post('/v1/users')
+        .set('Authorization', `Bearer ${superAdminAccessToken}`)
+        .send({
+          fullName: faker.name.findName(),
+          email: faker.internet.email().toLowerCase(),
+          password: 'password1',
+          role: 'student',
+          universityId: universityOne._id,
+          facultyId: facultyOne._id,
+          departmentId: nonExistentId,
+          studentId: '2023-CS-999',
+        })
         .expect(httpStatus.BAD_REQUEST);
     });
   });
