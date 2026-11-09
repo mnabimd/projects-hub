@@ -11,7 +11,7 @@ const createUser = {
     universityId: Joi.string().custom(objectId),
     facultyId: Joi.string().custom(objectId),
     departmentId: Joi.string().custom(objectId),
-    studentId: Joi.string().trim().when('role', {
+    kankorId: Joi.string().trim().when('role', {
       is: 'student',
       then: Joi.required(),
       otherwise: Joi.optional(),

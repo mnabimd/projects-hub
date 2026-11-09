@@ -76,6 +76,23 @@ const systemConfigSchema = mongoose.Schema(
       fromName: { type: String, default: 'ProjectsHub', trim: true },
       fromAddress: { type: String, default: 'no-reply@projectshub.com', trim: true, lowercase: true },
     },
+
+    // 8. Proposal Defaults
+    proposalDefaults: {
+      submissionMode: {
+        type: String,
+        enum: ['pdf', 'structured', 'flexible'],
+        default: 'pdf',
+      },
+      maxTeamSize: {
+        type: Number,
+        default: 4,
+      },
+      allowedTypes: {
+        type: [String],
+        default: ['universal', 'science'],
+      },
+    },
   },
   {
     timestamps: true,

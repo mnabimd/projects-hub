@@ -116,7 +116,7 @@ Align existing models and configurations with the unified terminology:
    - Update index: `facultySchema.index({ universityId: 1 })`
 3. **[`src/models/user.model.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/models/user.model.js)**:
    - Rename `institutionId` ➔ `universityId`
-   - Update compound partial index: `{ studentId: 1, universityId: 1 }`
+   - Update compound partial index: `{ kankorId: 1, universityId: 1 }`
 4. **[`src/models/project.model.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/models/project.model.js)**:
    - Rename `institutionId` ➔ `universityId`
 5. **[`src/seed/seed.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/seed/seed.js)**:

@@ -384,19 +384,14 @@ const seedDatabase = async () => {
       const numStudents = 5;
       for (let s = 1; s <= numStudents; s += 1) {
         studentCounter += 1;
-        const deptCode = ctx.department.name
-          .split(' ')
-          .map((w) => w[0])
-          .join('')
-          .toUpperCase();
-        const studentId = `2022-${deptCode}-${studentCounter}`;
+        const kankorId = `M2700${1133 + studentCounter}`;
 
         const studentDoc = {
           _id: mongoose.Types.ObjectId(),
           universityId: ctx.university._id,
           facultyId: ctx.faculty._id,
           departmentId: ctx.department._id,
-          studentId,
+          kankorId,
           fullName: `${faker.name.firstName()} ${faker.name.lastName()}`,
           email: `student_${studentCounter}@${ctx.university.domain}`,
           passwordHash: defaultPasswordHash,
@@ -463,12 +458,12 @@ const seedDatabase = async () => {
         isLocked: def.isLocked,
         leader: {
           userId: leaderStudent._id,
-          studentId: leaderStudent.studentId,
+          kankorId: leaderStudent.kankorId,
           fullName: leaderStudent.fullName,
         },
         members: memberStudents.map((m) => ({
           userId: m._id,
-          studentId: m.studentId,
+          kankorId: m.kankorId,
           fullName: m.fullName,
         })),
         monograph: {

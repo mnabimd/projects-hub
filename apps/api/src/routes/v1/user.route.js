@@ -71,7 +71,7 @@ module.exports = router;
  *               departmentId:
  *                 type: string
  *                 description: MongoDB ObjectId referencing embedded Department
- *               studentId:
+ *               kankorId:
  *                 type: string
  *                 description: Required when role is student; unique within university
  *             example:
@@ -79,7 +79,7 @@ module.exports = router;
  *               email: ahmad.rahimi@ku.edu.af
  *               password: password1
  *               role: student
- *               studentId: "2023-CS-101"
+ *               kankorId: "M27001234"
  *     responses:
  *       "201":
  *         description: Created

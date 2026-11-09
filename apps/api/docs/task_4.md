@@ -43,7 +43,7 @@ This plan outlines the changes needed to transition ProjectsHub to a closed, hie
 ### B. User Model (`apps/api/src/models/user.model.js`)
 * Update the Mongoose schema `role` enum to include `admin` and `department_head`.
 * Ensure indexing and relationship validation:
-  * Compound index for students: `{ studentId: 1, institutionId: 1 }` or `{ studentId: 1, universityId: 1 }`.
+  * Compound index for students: `{ kankorId: 1, institutionId: 1 }` or `{ kankorId: 1, universityId: 1 }`.
   * Ensure `universityId`, `facultyId`, and `departmentId` references align with the new role boundaries.
 
 ### C. Authentication Routes (`apps/api/src/routes/v1/auth.route.js`)
@@ -59,7 +59,7 @@ This plan outlines the changes needed to transition ProjectsHub to a closed, hie
     * `universityId` (required for `admin`, `faculty_dean`, `department_head`, `teacher`, `student`)
     * `facultyId` (required for `faculty_dean`, `department_head`, `teacher`, `student`)
     * `departmentId` (required for `department_head`, `student`, and departmental `teacher`)
-    * `studentId` (required if role is `student`)
+    * `kankorId` (required if role is `student`)
 
 ### E. User Service (`apps/api/src/services/user.service.js`)
 * Modify `createUser(creatorUser, userBody)`:

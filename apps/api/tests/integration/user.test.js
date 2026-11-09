@@ -208,7 +208,7 @@ describe('User routes', () => {
         role: 'student',
         facultyId: facultyOne._id,
         departmentId: facultyOne.departments[0]._id,
-        studentId: '2023-CS-999',
+        kankorId: 'M27009999',
       };
 
       await request(app)
@@ -386,12 +386,12 @@ describe('User routes', () => {
           email: 'student.dept@ku.edu.af',
           password: 'password1',
           role: 'student',
-          studentId: '2023-CS-002',
+          kankorId: 'M27001235',
         })
         .expect(httpStatus.CREATED);
 
       expect(studentRes.body.role).toBe('student');
-      expect(studentRes.body.studentId).toBe('2023-CS-002');
+      expect(studentRes.body.kankorId).toBe('M27001235');
       expect(studentRes.body.universityId).toBe(departmentHeadUser.universityId.toHexString());
       expect(studentRes.body.facultyId).toBe(departmentHeadUser.facultyId.toHexString());
       expect(studentRes.body.departmentId).toBe(departmentHeadUser.departmentId.toHexString());
@@ -454,7 +454,7 @@ describe('User routes', () => {
           email: faker.internet.email().toLowerCase(),
           password: 'password1',
           role: 'student',
-          studentId: '2023-CS-003',
+          kankorId: 'M27001236',
         })
         .expect(httpStatus.FORBIDDEN);
 
@@ -466,13 +466,13 @@ describe('User routes', () => {
           email: faker.internet.email().toLowerCase(),
           password: 'password1',
           role: 'student',
-          studentId: '2023-CS-004',
+          kankorId: 'M27001237',
         })
         .expect(httpStatus.FORBIDDEN);
     });
 
-    // Scenario 14: Duplicate studentId within same university
-    test('Scenario 14: cannot create student with duplicate studentId in same university (400 Bad Request)', async () => {
+    // Scenario 14: Duplicate kankorId within same university
+    test('Scenario 14: cannot create student with duplicate kankorId in same university (400 Bad Request)', async () => {
       await insertUsers([departmentHeadUser]);
 
       // First student
@@ -484,11 +484,11 @@ describe('User routes', () => {
           email: 'orig@ku.edu.af',
           password: 'password1',
           role: 'student',
-          studentId: '2023-CS-DUP',
+          kankorId: 'M27001238',
         })
         .expect(httpStatus.CREATED);
 
-      // Duplicate studentId in same university
+      // Duplicate kankorId in same university
       await request(app)
         .post('/v1/users')
         .set('Authorization', `Bearer ${departmentHeadAccessToken}`)
@@ -497,7 +497,7 @@ describe('User routes', () => {
           email: 'dup@ku.edu.af',
           password: 'password1',
           role: 'student',
-          studentId: '2023-CS-DUP',
+          kankorId: 'M27001238',
         })
         .expect(httpStatus.BAD_REQUEST);
     });
@@ -533,7 +533,7 @@ describe('User routes', () => {
           universityId: universityOne._id,
           facultyId: facultyOne._id,
           departmentId: nonExistentId,
-          studentId: '2023-CS-999',
+          kankorId: 'M27009999',
         })
         .expect(httpStatus.BAD_REQUEST);
     });

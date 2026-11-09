@@ -186,7 +186,7 @@ const studentUser = {
   universityId: universityOne._id,
   facultyId: facultyOne._id,
   departmentId: facultyOne.departments[0]._id,
-  studentId: '2023-CS-001',
+  kankorId: 'M27001234',
   isEmailVerified: true,
 };
 Object.defineProperty(studentUser, 'name', {

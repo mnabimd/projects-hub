@@ -10,3 +10,4 @@ module.exports.Project = require('./project.model');
 module.exports.Notification = require('./notification.model');
 module.exports.EmailOtp = require('./emailOtp.model');
 module.exports.SystemConfig = require('./systemConfig.model');
+module.exports.Proposal = require('./proposal.model');

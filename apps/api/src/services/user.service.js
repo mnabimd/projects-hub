@@ -42,8 +42,8 @@ const createUser = async (userBody, creatorUser = null) => {
           throw new ApiError(httpStatus.BAD_REQUEST, 'Faculty is required for teacher');
         }
       } else if (userData.role === 'student') {
-        if (!userData.facultyId || !userData.departmentId || !userData.studentId) {
-          throw new ApiError(httpStatus.BAD_REQUEST, 'Faculty, department, and student ID are required for student');
+        if (!userData.facultyId || !userData.departmentId || !userData.kankorId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, 'Faculty, department, and Kankor ID are required for student');
         }
       }
     } else if (creatorUser.role === 'admin') {
@@ -68,8 +68,8 @@ const createUser = async (userBody, creatorUser = null) => {
           throw new ApiError(httpStatus.BAD_REQUEST, 'Faculty is required for teacher');
         }
       } else if (userData.role === 'student') {
-        if (!userData.facultyId || !userData.departmentId || !userData.studentId) {
-          throw new ApiError(httpStatus.BAD_REQUEST, 'Faculty, department, and student ID are required for student');
+        if (!userData.facultyId || !userData.departmentId || !userData.kankorId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, 'Faculty, department, and Kankor ID are required for student');
         }
       }
     } else if (creatorUser.role === 'faculty_dean') {
@@ -87,8 +87,8 @@ const createUser = async (userBody, creatorUser = null) => {
           throw new ApiError(httpStatus.BAD_REQUEST, 'Department is required for department head');
         }
       } else if (userData.role === 'student') {
-        if (!userData.departmentId || !userData.studentId) {
-          throw new ApiError(httpStatus.BAD_REQUEST, 'Department and student ID are required for student');
+        if (!userData.departmentId || !userData.kankorId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, 'Department and Kankor ID are required for student');
         }
       }
     } else if (creatorUser.role === 'department_head') {
@@ -106,8 +106,8 @@ const createUser = async (userBody, creatorUser = null) => {
       userData.departmentId = creatorUser.departmentId;
 
       if (userData.role === 'student') {
-        if (!userData.studentId) {
-          throw new ApiError(httpStatus.BAD_REQUEST, 'Student ID is required for student');
+        if (!userData.kankorId) {
+          throw new ApiError(httpStatus.BAD_REQUEST, 'Kankor ID is required for student');
         }
       }
     }
@@ -142,13 +142,13 @@ const createUser = async (userBody, creatorUser = null) => {
     }
   }
 
-  if (userData.role === 'student' && userData.studentId && userData.universityId) {
+  if (userData.role === 'student' && userData.kankorId && userData.universityId) {
     const existingStudent = await User.findOne({
-      studentId: userData.studentId,
+      kankorId: userData.kankorId,
       universityId: userData.universityId,
     });
     if (existingStudent) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Student ID is already registered in this university');
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Kankor ID is already registered in this university');
     }
   }
 

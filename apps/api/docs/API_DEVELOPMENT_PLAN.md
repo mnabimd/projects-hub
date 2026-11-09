@@ -193,14 +193,14 @@ Enable enrolled students to initialize project drafts, attach research/code deli
 
 #### 3.2 Endpoints Specification
 - `POST /v1/projects`: Create project draft.
-  - *Behavior*: Automatically copies `req.user._id`, `studentId`, and `fullName` into the `leader` sub-document. Initial state: `status: 'draft'`, `versionNumber: 1`, `isLocked: false`.
+  - *Behavior*: Automatically copies `req.user._id`, `kankorId`, and `fullName` into the `leader` sub-document. Initial state: `status: 'draft'`, `versionNumber: 1`, `isLocked: false`.
 - `GET /v1/projects/my-projects`: List projects where `leader.userId === req.user._id` OR `members.userId === req.user._id`.
 - `GET /v1/projects/:projectId`: Retrieve full project document.
   - *Access Guard*: Available to project leader, team members, assigned supervisor, faculty dean, and super admin.
 - `PATCH /v1/projects/:projectId`: Incremental update of metadata, monograph details, software links, or technology tags.
   - *Business Invariant*: Blocked if `isLocked === true` or if `status === 'submitted'`. Allowed only when status is `draft` or `revision_requested`.
 - `POST /v1/projects/:projectId/members`: Add team member.
-  - *Validation*: Accepts `{ studentId }` or `{ userId }`. Verifies that the user exists, belongs to the same institution/faculty, is not already on the team, and has not exceeded maximum team size (default: 4 members).
+  - *Validation*: Accepts `{ kankorId }` or `{ userId }`. Verifies that the user exists, belongs to the same institution/faculty, is not already on the team, and has not exceeded maximum team size (default: 4 members).
 - `DELETE /v1/projects/:projectId/members/:userId`: Remove team member (callable by project leader).
 - `POST /v1/projects/:projectId/submit`: Formal submission.
   - *Pre-flight Checklist*: Verifies non-empty title, abstract, monograph PDF URL, supervisor assigned/selected, and graduation year. Transitions status from `draft` to `submitted`.

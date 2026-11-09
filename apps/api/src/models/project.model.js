@@ -11,7 +11,7 @@ const memberSchema = new mongoose.Schema(
       ref: 'User',
     },
 
-    studentId: {
+    kankorId: {
       type: String,
     },
 
@@ -120,6 +120,13 @@ const reviewSchema = new mongoose.Schema(
 
 const projectSchema = new mongoose.Schema(
   {
+    proposalId: {
+      type: ObjectId,
+      ref: 'Proposal',
+      unique: true,
+      sparse: true,
+    },
+
     universityId: {
       type: ObjectId,
       ref: 'University',

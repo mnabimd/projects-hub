@@ -29,7 +29,7 @@ flowchart TB
     end
 
     %% Flows - Authentication
-    Student -->|"1a. Login / Register with Student ID"| P1
+    Student -->|"1a. Login / Register with Kankor ID"| P1
     Teacher -->|"1b. Login with Institution Email"| P1
     Dean -->|"1c. Admin Authentication"| P1
     P1 <-->|"Verify hash, issue JWT tokens"| D1

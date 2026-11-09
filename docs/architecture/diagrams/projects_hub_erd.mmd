@@ -39,7 +39,7 @@ erDiagram
         ObjectId institutionId FK "ref: Universities"
         ObjectId facultyId FK "ref: Faculties"
         ObjectId departmentId "FK to embedded department"
-        String studentId "Partial Unique with institutionId"
+        String kankorId "Partial Unique with institutionId"
         String fullName "User Full Name"
         String email UK "Unique Email Address"
         String passwordHash "Bcrypt Hash (hidden)"
@@ -66,7 +66,7 @@ erDiagram
 
     PROJECT_MEMBERS {
         ObjectId userId FK "ref: Users"
-        String studentId "Denormalized Student ID"
+        String kankorId "Denormalized Kankor ID"
         String fullName "Denormalized Full Name"
     }
 

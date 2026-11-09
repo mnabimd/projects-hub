@@ -21,7 +21,7 @@ const userSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
     },
 
-    studentId: {
+    kankorId: {
       type: String,
       trim: true,
       set: (v) => (v === '' ? undefined : v),
@@ -101,17 +101,17 @@ userSchema.pre('validate', async function (next) {
   next();
 });
 
-// Unique student IDs within a university. A partial index avoids indexing
-// staff records that do not have a studentId
+// Unique Kankor IDs within a university. A partial index avoids indexing
+// staff records that do not have a kankorId
 userSchema.index(
   {
-    studentId: 1,
+    kankorId: 1,
     universityId: 1,
   },
   {
     unique: true,
     partialFilterExpression: {
-      studentId: {
+      kankorId: {
         $type: 'string',
       },
     },
