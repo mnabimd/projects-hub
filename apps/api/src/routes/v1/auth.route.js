@@ -3,17 +3,27 @@ const validate = require('../../middlewares/validate');
 const authValidation = require('../../validations/auth.validation');
 const authController = require('../../controllers/auth.controller');
 const auth = require('../../middlewares/auth');
+const { otpLimiter } = require('../../middlewares/rateLimiter');
 
 const router = express.Router();
 
-router.post('/register', validate(authValidation.register), authController.register);
+// Public self-registration is disabled in favor of hierarchical user provisioning.
+// Any request to /register will fall through to 404 Not Found.
+// router.post('/register', validate(authValidation.register), authController.register);
 router.post('/login', validate(authValidation.login), authController.login);
 router.post('/logout', validate(authValidation.logout), authController.logout);
 router.post('/refresh-tokens', validate(authValidation.refreshTokens), authController.refreshTokens);
 router.post('/forgot-password', validate(authValidation.forgotPassword), authController.forgotPassword);
 router.post('/reset-password', validate(authValidation.resetPassword), authController.resetPassword);
-router.post('/send-verification-email', auth(), authController.sendVerificationEmail);
+router.post('/send-verification-email', otpLimiter, auth(), authController.sendVerificationEmail);
 router.post('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
+router.post(
+  '/verify-email-otp',
+  otpLimiter,
+  auth(),
+  validate(authValidation.verifyEmailOtp),
+  authController.verifyEmailWithOtp
+);
 
 module.exports = router;
 
@@ -24,52 +34,14 @@ module.exports = router;
  *   description: Authentication
  */
 
-/**
+/*
+ * Note: /auth/register Swagger documentation is disabled as public registration is closed.
+ * (Preserved for internal reference)
  * @swagger
  * /auth/register:
  *   post:
  *     summary: Register as user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *                 format: email
- *                 description: must be unique
- *               password:
- *                 type: string
- *                 format: password
- *                 minLength: 8
- *                 description: At least one number and one letter
- *             example:
- *               name: fake name
- *               email: fake@example.com
- *               password: password1
- *     responses:
- *       "201":
- *         description: Created
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 tokens:
- *                   $ref: '#/components/schemas/AuthTokens'
- *       "400":
- *         $ref: '#/components/responses/DuplicateEmail'
+ *     ...
  */
 
 /**
@@ -252,7 +224,7 @@ module.exports = router;
  * /auth/send-verification-email:
  *   post:
  *     summary: Send verification email
- *     description: An email will be sent to verify email.
+ *     description: Sends a fresh magic link and six-digit OTP to the authenticated user's email.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -288,4 +260,39 @@ module.exports = router;
  *             example:
  *               code: 401
  *               message: verify email failed
+ */
+
+/**
+ * @swagger
+ * /auth/verify-email-otp:
+ *   post:
+ *     summary: Verify email using a six-digit OTP
+ *     description: Verify the authenticated user's email using the OTP sent by email.
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 minLength: 6
+ *                 maxLength: 6
+ *                 pattern: '^[0-9]{6}$'
+ *                 example: '038471'
+ *     responses:
+ *       "204":
+ *         description: Email verified successfully
+ *       "400":
+ *         description: Invalid or expired OTP
+ *       "401":
+ *         $ref: '#/components/responses/Unauthorized'
+ *       "429":
+ *         description: Too many incorrect attempts. Request a new verification code.
  */

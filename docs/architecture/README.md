@@ -49,7 +49,7 @@ System user accounts with role-based segregation.
 - `institutionId`: `ObjectId` (ref `University`)
 - `facultyId`: `ObjectId` (ref `Faculty`)
 - `departmentId`: `ObjectId` (FK to embedded department in Faculty)
-- `studentId`: `String` (Trimmed, indexed via partial compound unique index `{ studentId: 1, institutionId: 1 }`)
+- `kankorId`: `String` (Trimmed, indexed via partial compound unique index `{ kankorId: 1, institutionId: 1 }`)
 - `fullName`: `String` (Required)
 - `email`: `String` (Required, unique index, validated email)
 - `passwordHash`: `String` (Bcrypt hash, hidden with `private: true, select: false`)
@@ -70,8 +70,8 @@ Central repository of monographs and software deliverables.
 - `versionNumber`: `Number` (Default `1`, incremented on resubmission)
 - `isLocked`: `Boolean` (Locked after approval to prevent tampering)
 - `assignedTeacherId`: `ObjectId` (ref `User`, project supervisor)
-- `leader`: `Member` (Embedded: `{ userId, studentId, fullName }`)
-- `members`: `[Member]` (Embedded array: `[{ userId, studentId, fullName }]`)
+- `leader`: `Member` (Embedded: `{ userId, kankorId, fullName }`)
+- `members`: `[Member]` (Embedded array: `[{ userId, kankorId, fullName }]`)
 - `monograph`: `Monograph` (Embedded sub-document):
   - `pdfFileUrl`: `String` (Remote storage URL)
   - `abstract`: `String` (Full-text indexed)
@@ -132,7 +132,7 @@ Authentication and authorization token tracking.
 | **Public Catalog Filtering** | `{ status: 1, graduationYear: -1, facultyId: 1, departmentId: 1, "software.techTagIds": 1 }` | Compound Index | Optimizes catalog filters by year, department, tags, and approval status |
 | **Leader Projects** | `{ "leader.userId": 1 }` | Single Field Index | Rapid lookup of projects where user is leader |
 | **Member Projects** | `{ "members.userId": 1 }` | Single Field Index | Rapid lookup of projects where user is a team member |
-| **Student ID Uniqueness** | `{ studentId: 1, institutionId: 1 }` | Unique Partial (`studentId: { $type: "string" }`) | Enforces unique student IDs per institution while ignoring staff accounts |
+| **Kankor ID Uniqueness** | `{ kankorId: 1, institutionId: 1 }` | Unique Partial (`kankorId: { $type: "string" }`) | Enforces unique Kankor IDs per institution while ignoring staff accounts |
 | **Active Notifications** | `{ userId: 1, isRead: 1, createdAt: -1 }` | Compound Index | Fast retrieval of unread notifications sorted newest first |
 
 ---
@@ -146,7 +146,7 @@ The Data Flow Diagram illustrates how information moves across external entities
 
 ### Key Flows
 1. **Onboarding & Auth (1.0)**:
-   - Users authenticate with institutional email or Student ID.
+   - Users authenticate with institutional email or Kankor ID.
    - Passwords verified with Bcrypt; JWT access tokens (short-lived) and refresh tokens (persisted in `tokens`) issued.
 2. **Project Authoring & Media (3.0)**:
    - Students create draft projects, add team members, and link technology tags.

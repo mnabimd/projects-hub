@@ -57,4 +57,3 @@ describe('User model', () => {
     });
   });
 });
-

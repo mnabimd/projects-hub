@@ -3,19 +3,20 @@ const auth = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
 const userValidation = require('../../validations/user.validation');
 const userController = require('../../controllers/user.controller');
+const requireEmailVerified = require('../../middlewares/requireEmailVerified');
 
 const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageUsers'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
+  .post(auth('manageUsers'), requireEmailVerified(), validate(userValidation.createUser), userController.createUser)
+  .get(auth('getUsers'), requireEmailVerified(), validate(userValidation.getUsers), userController.getUsers);
 
 router
   .route('/:userId')
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
-  .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
-  .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
+  .get(auth('getUsers'), requireEmailVerified(true), validate(userValidation.getUser), userController.getUser)
+  .patch(auth('manageUsers'), requireEmailVerified(), validate(userValidation.updateUser), userController.updateUser)
+  .delete(auth('manageUsers'), requireEmailVerified(), validate(userValidation.deleteUser), userController.deleteUser);
 
 module.exports = router;
 
@@ -31,7 +32,7 @@ module.exports = router;
  * /users:
  *   post:
  *     summary: Create a user
- *     description: Only admins can create other users.
+ *     description: Authenticated academic administrators can provision subordinate users according to the role hierarchy and institutional scope.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -42,12 +43,12 @@ module.exports = router;
  *           schema:
  *             type: object
  *             required:
- *               - name
+ *               - fullName
  *               - email
  *               - password
  *               - role
  *             properties:
- *               name:
+ *               fullName:
  *                 type: string
  *               email:
  *                 type: string
@@ -59,13 +60,26 @@ module.exports = router;
  *                 minLength: 8
  *                 description: At least one number and one letter
  *               role:
- *                  type: string
- *                  enum: [user, admin]
+ *                 type: string
+ *                 enum: [admin, faculty_dean, department_head, teacher, student]
+ *               universityId:
+ *                 type: string
+ *                 description: MongoDB ObjectId referencing University
+ *               facultyId:
+ *                 type: string
+ *                 description: MongoDB ObjectId referencing Faculty
+ *               departmentId:
+ *                 type: string
+ *                 description: MongoDB ObjectId referencing embedded Department
+ *               kankorId:
+ *                 type: string
+ *                 description: Required when role is student; unique within university
  *             example:
- *               name: fake name
- *               email: fake@example.com
+ *               fullName: Ahmad Rahimi
+ *               email: ahmad.rahimi@ku.edu.af
  *               password: password1
- *               role: user
+ *               role: student
+ *               kankorId: "M27001234"
  *     responses:
  *       "201":
  *         description: Created
@@ -74,7 +88,7 @@ module.exports = router;
  *             schema:
  *                $ref: '#/components/schemas/User'
  *       "400":
- *         $ref: '#/components/responses/DuplicateEmail'
+ *         description: Validation error or referential integrity failure
  *       "401":
  *         $ref: '#/components/responses/Unauthorized'
  *       "403":

@@ -1,0 +1,21 @@
+meta {
+  name: Delete Faculty (Admin)
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/faculties/{{createdFacultyId}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("deletes faculty and returns 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}

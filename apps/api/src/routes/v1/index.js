@@ -2,6 +2,9 @@ const express = require('express');
 const authRoute = require('./auth.route');
 const userRoute = require('./user.route');
 const tagRoute = require('./tag.route');
+const universityRoute = require('./university.route');
+const facultyRoute = require('./faculty.route');
+const systemRoute = require('./system.route');
 const docsRoute = require('./docs.route');
 const config = require('../../config/config');
 
@@ -19,6 +22,18 @@ const defaultRoutes = [
   {
     path: '/tags',
     route: tagRoute,
+  },
+  {
+    path: '/universities',
+    route: universityRoute,
+  },
+  {
+    path: '/faculties',
+    route: facultyRoute,
+  },
+  {
+    path: '/system',
+    route: systemRoute,
   },
 ];
 

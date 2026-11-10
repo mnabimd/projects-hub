@@ -6,7 +6,7 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
-    institutionId: {
+    universityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'University',
     },
@@ -21,7 +21,7 @@ const userSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
     },
 
-    studentId: {
+    kankorId: {
       type: String,
       trim: true,
       set: (v) => (v === '' ? undefined : v),
@@ -101,17 +101,17 @@ userSchema.pre('validate', async function (next) {
   next();
 });
 
-// Unique student IDs within an institution. A partial index avoids indexing
-// staff records that do not have a studentId
+// Unique Kankor IDs within a university. A partial index avoids indexing
+// staff records that do not have a kankorId
 userSchema.index(
   {
-    studentId: 1,
-    institutionId: 1,
+    kankorId: 1,
+    universityId: 1,
   },
   {
     unique: true,
     partialFilterExpression: {
-      studentId: {
+      kankorId: {
         $type: 'string',
       },
     },
@@ -121,7 +121,6 @@ userSchema.index(
 userSchema.plugin(toJSON);
 userSchema.plugin(paginate);
 userSchema.plugin(publicId, { prefix: 'usr' });
-
 
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   if (!email || typeof email !== 'string') {
@@ -138,7 +137,6 @@ userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   return !!existingUser;
 };
 
-
 userSchema.methods.setPassword = async function (plainPassword) {
   if (
     typeof plainPassword !== 'string' ||
@@ -151,7 +149,6 @@ userSchema.methods.setPassword = async function (plainPassword) {
 
   this.passwordHash = await bcrypt.hash(plainPassword, 8);
 };
-
 
 userSchema.methods.isPasswordMatch = async function (plainPassword) {
   if (typeof plainPassword !== 'string') {

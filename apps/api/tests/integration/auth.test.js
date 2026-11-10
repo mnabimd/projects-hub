@@ -18,72 +18,19 @@ const { userOneAccessToken, adminAccessToken } = require('../fixtures/token.fixt
 setupTestDB();
 
 describe('Auth routes', () => {
+  beforeEach(() => {
+    jest.spyOn(emailService.transport, 'sendMail').mockResolvedValue();
+  });
+
   describe('POST /v1/auth/register', () => {
-    let newUser;
-    beforeEach(() => {
-      newUser = {
+    test('should return 404 Not Found as public registration route is completely disabled', async () => {
+      const newUser = {
         fullName: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
       };
-    });
 
-    test('should return 201 and successfully register user if request data is ok', async () => {
-      const res = await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.CREATED);
-
-      expect(res.body.user).not.toHaveProperty('password');
-      expect(res.body.user).not.toHaveProperty('passwordHash');
-      expect(res.body.user).toMatchObject({
-        id: expect.anything(),
-        fullName: newUser.fullName,
-        email: newUser.email,
-        role: 'student',
-        isEmailVerified: false,
-      });
-
-      const dbUser = await User.findById(res.body.user.id);
-      expect(dbUser).toBeDefined();
-      expect(await dbUser.isPasswordMatch(newUser.password)).toBe(true);
-      expect(dbUser).toMatchObject({
-        fullName: newUser.fullName,
-        email: newUser.email,
-        role: 'student',
-        isEmailVerified: false,
-      });
-
-      expect(res.body.tokens).toEqual({
-        access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() },
-      });
-    });
-
-    test('should return 400 error if email is invalid', async () => {
-      newUser.email = 'invalidEmail';
-
-      await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    });
-
-    test('should return 400 error if email is already used', async () => {
-      await insertUsers([userOne]);
-      newUser.email = userOne.email;
-
-      await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    });
-
-    test('should return 400 error if password length is less than 8 characters', async () => {
-      newUser.password = 'passwo1';
-
-      await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    });
-
-    test('should return 400 error if password does not contain both letters and numbers', async () => {
-      newUser.password = 'password';
-
-      await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-
-      newUser.password = '11111111';
-
-      await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
+      await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.NOT_FOUND);
     });
   });
 
@@ -374,7 +321,7 @@ describe('Auth routes', () => {
         .set('Authorization', `Bearer ${userOneAccessToken}`)
         .expect(httpStatus.NO_CONTENT);
 
-      expect(sendVerificationEmailSpy).toHaveBeenCalledWith(userOne.email, expect.any(String));
+      expect(sendVerificationEmailSpy).toHaveBeenCalledWith(userOne.email, expect.any(String), expect.any(String));
       const verifyEmailToken = sendVerificationEmailSpy.mock.calls[0][1];
       const dbVerifyEmailToken = await Token.findOne({ token: verifyEmailToken, user: userOne._id });
 

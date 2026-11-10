@@ -83,8 +83,8 @@ The current permissions in [`src/config/roles.js`](file:///Users/apple/Desktop/P
 
 | Permission | Student | Teacher | Faculty Dean | Super Admin | Description |
 |---|:---:|:---:|:---:|:---:|---|
-| `getInstitutions` | ✅ | ✅ | ✅ | ✅ | Read university and faculty hierarchies |
-| `manageInstitutions` | ❌ | ❌ | Partial* | ✅ | Create/update universities, faculties, departments |
+| `getUniversities` | ✅ | ✅ | ✅ | ✅ | Read university and faculty hierarchies |
+| `manageUniversities` | ❌ | ❌ | Partial* | ✅ | Create/update universities, faculties, departments |
 | `getTags` | ✅ | ✅ | ✅ | ✅ | Query technology tags for filtering & project creation |
 | `manageTags` | ❌ | ✅ | ✅ | ✅ | Create, categorize, or curate technology tags |
 | `createProject` | ✅ | ❌ | ❌ | ✅ | Initialize draft projects |
@@ -96,7 +96,7 @@ The current permissions in [`src/config/roles.js`](file:///Users/apple/Desktop/P
 | `getNotifications` | ✅ | ✅ | ✅ | ✅ | Access user notification inbox |
 | `manageUsers` | ❌ | ❌ | Partial* | ✅ | Provision or update departmental student/teacher accounts |
 
-*\*Note: Faculty Deans are scoped exclusively to their own `institutionId` and `facultyId`.*
+*\*Note: Faculty Deans are scoped exclusively to their own `universityId` and `facultyId`.*
 
 ---
 
@@ -143,12 +143,12 @@ Build the institutional hierarchies required by user profiles and project submis
 #### 1.2 Endpoints Specification
 
 ##### Universities & Faculties
-- `GET /v1/universities`: List all active institutions. (Public or Authenticated)
-- `POST /v1/universities`: Register an institution. (Requires `manageInstitutions`)
-- `GET /v1/universities/:universityId`: Detailed institution profile.
-- `GET /v1/universities/:universityId/faculties`: List faculties under an institution with embedded departments.
-- `POST /v1/universities/:universityId/faculties`: Add faculty with initial departments. (Requires `manageInstitutions`)
-- `POST /v1/universities/:universityId/faculties/:facultyId/departments`: Append department to faculty array.
+- `GET /v1/universities`: List all active universities. (Public or Authenticated)
+- `POST /v1/universities`: Register a university. (Requires `manageUniversities`)
+- `GET /v1/universities/:universityId`: Detailed university profile.
+- `GET /v1/universities/:universityId/faculties`: List faculties under a university with embedded departments.
+- `POST /v1/universities/:universityId/faculties`: Add faculty with initial departments. (Requires `manageUniversities`)
+- `POST /v1/faculties/:facultyId/departments`: Append department to faculty array. (Requires `manageUniversities`)
 
 ##### Technology Tags
 - `GET /v1/tags`: Query tags with optional `?category=backend|frontend|ai|mobile` and pagination.
@@ -193,14 +193,14 @@ Enable enrolled students to initialize project drafts, attach research/code deli
 
 #### 3.2 Endpoints Specification
 - `POST /v1/projects`: Create project draft.
-  - *Behavior*: Automatically copies `req.user._id`, `studentId`, and `fullName` into the `leader` sub-document. Initial state: `status: 'draft'`, `versionNumber: 1`, `isLocked: false`.
+  - *Behavior*: Automatically copies `req.user._id`, `kankorId`, and `fullName` into the `leader` sub-document. Initial state: `status: 'draft'`, `versionNumber: 1`, `isLocked: false`.
 - `GET /v1/projects/my-projects`: List projects where `leader.userId === req.user._id` OR `members.userId === req.user._id`.
 - `GET /v1/projects/:projectId`: Retrieve full project document.
   - *Access Guard*: Available to project leader, team members, assigned supervisor, faculty dean, and super admin.
 - `PATCH /v1/projects/:projectId`: Incremental update of metadata, monograph details, software links, or technology tags.
   - *Business Invariant*: Blocked if `isLocked === true` or if `status === 'submitted'`. Allowed only when status is `draft` or `revision_requested`.
 - `POST /v1/projects/:projectId/members`: Add team member.
-  - *Validation*: Accepts `{ studentId }` or `{ userId }`. Verifies that the user exists, belongs to the same institution/faculty, is not already on the team, and has not exceeded maximum team size (default: 4 members).
+  - *Validation*: Accepts `{ kankorId }` or `{ userId }`. Verifies that the user exists, belongs to the same institution/faculty, is not already on the team, and has not exceeded maximum team size (default: 4 members).
 - `DELETE /v1/projects/:projectId/members/:userId`: Remove team member (callable by project leader).
 - `POST /v1/projects/:projectId/submit`: Formal submission.
   - *Pre-flight Checklist*: Verifies non-empty title, abstract, monograph PDF URL, supervisor assigned/selected, and graduation year. Transitions status from `draft` to `submitted`.

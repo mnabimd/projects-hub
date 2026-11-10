@@ -1,18 +1,25 @@
 const allRoles = {
   student: [
     'getTags',
-    'getInstitutions',
+    'getUniversities',
     'createProject',
     'manageOwnProject',
     'submitProject',
+    'createProposal',
+    'manageOwnProposal',
+    'submitProposal',
     'getNotifications',
   ],
-  teacher: [
+  teacher: ['getUsers', 'getTags', 'manageTags', 'getUniversities', 'reviewProject', 'reviewProposal', 'getNotifications'],
+  department_head: [
     'getUsers',
+    'manageUsers',
     'getTags',
-    'manageTags',
-    'getInstitutions',
+    'getUniversities',
     'reviewProject',
+    'getProposals',
+    'reviewProposal',
+    'manageDepartmentSettings',
     'getNotifications',
   ],
   faculty_dean: [
@@ -20,11 +27,25 @@ const allRoles = {
     'manageUsers',
     'getTags',
     'manageTags',
-    'getInstitutions',
-    'manageInstitutions',
+    'getUniversities',
+    'manageUniversities',
     'assignSupervisor',
     'reviewProject',
     'publishProject',
+    'getProposals',
+    'reviewProposal',
+    'manageDepartmentSettings',
+    'getNotifications',
+  ],
+  admin: [
+    'getUsers',
+    'manageUsers',
+    'getUniversities',
+    'manageUniversities',
+    'getTags',
+    'manageTags',
+    'getProposals',
+    'manageDepartmentSettings',
     'getNotifications',
   ],
   super_admin: [
@@ -32,16 +53,32 @@ const allRoles = {
     'manageUsers',
     'getTags',
     'manageTags',
-    'getInstitutions',
-    'manageInstitutions',
+    'getUniversities',
+    'manageUniversities',
     'createProject',
     'manageOwnProject',
     'submitProject',
+    'createProposal',
+    'manageOwnProposal',
+    'submitProposal',
+    'getProposals',
+    'reviewProposal',
+    'manageDepartmentSettings',
     'assignSupervisor',
     'reviewProject',
     'publishProject',
     'getNotifications',
+    'manageSystem',
   ],
+};
+
+const roleHierarchy = {
+  super_admin: ['admin', 'faculty_dean', 'department_head', 'teacher', 'student'],
+  admin: ['faculty_dean', 'department_head', 'teacher', 'student'],
+  faculty_dean: ['department_head', 'teacher', 'student'],
+  department_head: ['teacher', 'student'],
+  teacher: [],
+  student: [],
 };
 
 const roles = Object.keys(allRoles);
@@ -50,6 +87,5 @@ const roleRights = new Map(Object.entries(allRoles));
 module.exports = {
   roles,
   roleRights,
+  roleHierarchy,
 };
-
-

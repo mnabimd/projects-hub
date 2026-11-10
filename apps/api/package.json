@@ -27,7 +27,8 @@
     "prettier:fix": "prettier --write **/*.js",
     "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
     "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
-    "test:bruno": "npx @usebruno/cli run bruno --env Local",
+    "test:bruno": "cd bruno && npx @usebruno/cli run -r --env Local",
+    "test:bruno:system": "cd bruno && npx @usebruno/cli run system --env Local",
     "seed": "cross-env NODE_ENV=development node src/seed/seed.js",
     "seed:clean": "cross-env NODE_ENV=development node src/seed/seed.js --clean"
   },

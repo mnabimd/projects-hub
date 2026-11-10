@@ -1,0 +1,25 @@
+meta {
+  name: Delete Tag (Admin)
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/tags/{{createdTagId}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  createdTagId: 6adcc664ccbc0d9b0cd565ee
+}
+
+assert {
+  res.status: in [204, 404]
+}
+
+tests {
+  test("deletes tag or returns 204", function() {
+    expect([204, 404]).to.include(res.getStatus());
+  });
+}

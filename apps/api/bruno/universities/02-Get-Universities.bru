@@ -1,0 +1,30 @@
+meta {
+  name: Get Universities (Public)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/universities?limit=10&page=1
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 10
+  page: 1
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+  res.body.page: eq 1
+}
+
+tests {
+  test("returns list of universities with pagination", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(body.results).to.be.an('array');
+  });
+}

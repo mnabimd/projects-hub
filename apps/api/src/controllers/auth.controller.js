@@ -1,10 +1,21 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
-const { authService, userService, tokenService, emailService } = require('../services');
+const logger = require('../config/logger');
+const { authService, userService, tokenService, emailService, otpService } = require('../services');
 
 const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
+
+  // Auto-send verification email with both magic link and OTP
+  try {
+    const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
+    const otp = await otpService.createEmailOtp(user.id);
+    await emailService.sendVerificationEmail(user.email, verifyEmailToken, otp);
+  } catch (error) {
+    logger.error(`Failed to send verification email to ${user.email}: ${error.message}`);
+  }
+
   res.status(httpStatus.CREATED).send({ user, tokens });
 });
 
@@ -38,12 +49,20 @@ const resetPassword = catchAsync(async (req, res) => {
 
 const sendVerificationEmail = catchAsync(async (req, res) => {
   const verifyEmailToken = await tokenService.generateVerifyEmailToken(req.user);
-  await emailService.sendVerificationEmail(req.user.email, verifyEmailToken);
+  const otp = await otpService.createEmailOtp(req.user.id);
+
+  await emailService.sendVerificationEmail(req.user.email, verifyEmailToken, otp);
+
   res.status(httpStatus.NO_CONTENT).send();
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
   await authService.verifyEmail(req.query.token);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const verifyEmailWithOtp = catchAsync(async (req, res) => {
+  await otpService.verifyEmailOtp(req.user.id, req.body.otp);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
@@ -56,4 +75,5 @@ module.exports = {
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
+  verifyEmailWithOtp,
 };

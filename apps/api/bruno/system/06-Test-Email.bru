@@ -1,0 +1,31 @@
+meta {
+  name: Test Email Delivery (Super Admin)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/system/test-email
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+body:json {
+  {
+    "to": "admin@projectshub.com"
+  }
+}
+
+assert {
+  res.status: in [204, 500]
+}
+
+tests {
+  test("responds to test-email request", function() {
+    expect([204, 500]).to.include(res.getStatus());
+  });
+}

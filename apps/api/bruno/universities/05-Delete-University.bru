@@ -1,0 +1,21 @@
+meta {
+  name: Delete University (Admin)
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/universities/{{createdUniversityId}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("deletes university and returns 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}

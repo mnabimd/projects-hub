@@ -1,0 +1,33 @@
+meta {
+  name: Get All Tags
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/tags
+  body: none
+  auth: inherit
+}
+
+params:query {
+  limit: 10
+  page: 1
+  sortBy: createdAt:desc
+}
+
+assert {
+  res.status: eq 200
+  res.body.results: isDefined
+  res.body.page: eq 1
+  res.body.limit: eq 10
+}
+
+tests {
+  test("returns paginated tags list", function() {
+    const body = res.getBody();
+    expect(res.getStatus()).to.equal(200);
+    expect(Array.isArray(body.results)).to.be.true;
+    expect(body.totalResults).to.be.a("number");
+  });
+}
