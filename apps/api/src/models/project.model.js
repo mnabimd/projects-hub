@@ -227,6 +227,16 @@ projectSchema.plugin(toJSON);
 projectSchema.plugin(paginate);
 projectSchema.plugin(publicId, { prefix: 'prj' });
 
+// The API exposes publicId as the project's identifier. Keep MongoDB's _id
+// available internally for Mongoose relations and indexes, but do not serialize
+// the root Project id in API responses.
+const defaultToJSONTransform = projectSchema.options.toJSON.transform;
+projectSchema.options.toJSON.transform = (doc, ret, options) => {
+  const transformed = defaultToJSONTransform ? defaultToJSONTransform(doc, ret, options) || ret : ret;
+  delete transformed.id;
+  return transformed;
+};
+
 const Project = mongoose.model('Project', projectSchema, 'projects');
 
 module.exports = Project;

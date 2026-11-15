@@ -7,3 +7,4 @@ module.exports.universityService = require('./university.service');
 module.exports.facultyService = require('./faculty.service');
 module.exports.otpService = require('./otp.service');
 module.exports.systemConfigService = require('./systemConfig.service');
+module.exports.projectService = require('./project.service');

@@ -55,8 +55,6 @@ const allRoles = {
     'manageTags',
     'getUniversities',
     'manageUniversities',
-    'createProject',
-    'manageOwnProject',
     'submitProject',
     'createProposal',
     'manageOwnProposal',
