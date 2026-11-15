@@ -5,6 +5,7 @@ const tagRoute = require('./tag.route');
 const universityRoute = require('./university.route');
 const facultyRoute = require('./faculty.route');
 const systemRoute = require('./system.route');
+const projectRoute = require('./project.route');
 const docsRoute = require('./docs.route');
 const config = require('../../config/config');
 
@@ -34,6 +35,10 @@ const defaultRoutes = [
   {
     path: '/system',
     route: systemRoute,
+  },
+  {
+    path: '/projects',
+    route: projectRoute,
   },
 ];
 
