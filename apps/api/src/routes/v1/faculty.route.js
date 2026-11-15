@@ -10,6 +10,19 @@ const router = express.Router();
 // Public read route (no auth needed)
 router.get('/:facultyId', validate(facultyValidation.getFaculty), facultyController.getFaculty);
 
+router.get(
+  '/:facultyId/departments/:departmentId/settings',
+  validate(facultyValidation.getDepartmentProposalSettings),
+  facultyController.getDepartmentProposalSettings
+);
+// Department proposal settings route
+router.patch(
+  '/:facultyId/departments/:departmentId/settings',
+  auth('manageDepartmentSettings'),
+  requireEmailVerified(),
+  validate(facultyValidation.updateDepartmentProposalSettings),
+  facultyController.updateDepartmentProposalSettings
+);
 // All write routes require auth + verified email
 router.use(auth('manageUniversities'));
 router.use(requireEmailVerified());
@@ -24,3 +37,4 @@ router.delete(
 );
 
 module.exports = router;
+

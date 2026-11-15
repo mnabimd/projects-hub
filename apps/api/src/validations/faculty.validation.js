@@ -65,6 +65,30 @@ const deleteDepartment = {
     departmentId: Joi.string().required().custom(objectId),
   }),
 };
+const getDepartmentProposalSettings = {
+  params: Joi.object().keys({
+    facultyId: Joi.string().custom(objectId).required(),
+    departmentId: Joi.string().custom(objectId).required(),
+  }),
+};
+
+const updateDepartmentProposalSettings = {
+  params: Joi.object().keys({
+    facultyId: Joi.string().custom(objectId).required(),
+    departmentId: Joi.string().custom(objectId).required(),
+  }),
+  body: Joi.object()
+    .keys({
+      submissionMode: Joi.string().valid('pdf', 'structured', 'flexible'),
+      allowedTypes: Joi.array().items(Joi.string().valid('universal', 'science')).min(1),
+      maxTeamSize: Joi.number().integer().min(1).max(10),
+      isSubmissionOpen: Joi.boolean(),
+      submissionDeadline: Joi.date().iso().allow(null),
+      guidelinesUrl: Joi.string().uri().allow('', null).trim(),
+      instructions: Joi.string().allow('', null).trim(),
+    })
+    .min(1),
+};
 
 module.exports = {
   createFaculty,
@@ -74,4 +98,6 @@ module.exports = {
   deleteFaculty,
   createDepartment,
   deleteDepartment,
+  getDepartmentProposalSettings,
+  updateDepartmentProposalSettings
 };

@@ -1,7 +1,9 @@
 const httpStatus = require('http-status');
 const mongoose = require('mongoose');
-const { Faculty, University, User, Project } = require('../models');
+const { Faculty, University, User, Project, SystemConfig } = require('../models');
 const ApiError = require('../utils/ApiError');
+const systemConfigService = require('./systemConfig.service');
+// const SystemConfig = require('../models/systemConfig.model')
 
 /**
  * Create a faculty under a university
@@ -134,6 +136,53 @@ const removeDepartment = async (facultyId, departmentId) => {
   await Faculty.updateOne({ _id: facultyId }, { $pull: { departments: { _id: departmentId } } });
 };
 
+const resolveSettings = (department, systemConfig) => {
+  const d = department.settings?.proposal || {};
+  const defaults = systemConfig.proposalDefaults || {};
+  return {
+    submissionMode: d.submissionMode || defaults.submissionMode || 'pdf',
+    allowedTypes: d.allowedTypes && d.allowedTypes.length > 0
+      ? d.allowedTypes
+      : defaults.allowedTypes || ['universal', 'science'],
+    maxTeamSize: d.maxTeamSize ?? defaults.maxTeamSize ?? 4,
+    isSubmissionOpen: d.isSubmissionOpen ?? true,
+    submissionDeadline: d.submissionDeadline ?? null,
+    guidelinesUrl: d.guidelinesUrl ?? null,
+    instructions: d.instructions ?? '',
+  };
+};
+
+const getDepartmentProposalSettings = async (facultyId, departmentId) => {
+  const faculty = await Faculty.findById(facultyId);
+  if (!faculty) throw new ApiError(httpStatus.NOT_FOUND, 'Faculty not found');
+  const department = faculty.departments.id(departmentId);
+  if (!department) throw new ApiError(httpStatus.NOT_FOUND, 'Department not found');
+  const systemConfig = await systemConfigService.getConfig();
+  return resolveSettings(department, systemConfig);
+};
+
+const updateDepartmentProposalSettings = async (facultyId, departmentId, updateBody, user) => {
+  if (user.role !== 'department_head') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden: Only the department head can manage department proposal settings');
+  }
+  if (user.facultyId?.toString() !== facultyId.toString() ||
+      user.departmentId?.toString() !== departmentId.toString()) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden: You can only manage settings for your own assigned department');
+  }
+  const faculty = await Faculty.findById(facultyId);
+  if (!faculty) throw new ApiError(httpStatus.NOT_FOUND, 'Faculty not found');
+  const department = faculty.departments.id(departmentId);
+  if (!department) throw new ApiError(httpStatus.NOT_FOUND, 'Department not found');
+
+  department.settings = department.settings || {};
+  department.settings.proposal = department.settings.proposal || {};
+  Object.assign(department.settings.proposal, updateBody);
+  await faculty.save();
+
+  const systemConfig = await systemConfigService.getConfig();
+  return resolveSettings(department, systemConfig);
+};
+
 module.exports = {
   createFaculty,
   queryFacultiesByUniversity,
@@ -142,4 +191,6 @@ module.exports = {
   deleteFacultyById,
   addDepartment,
   removeDepartment,
+  getDepartmentProposalSettings,
+  updateDepartmentProposalSettings,
 };
