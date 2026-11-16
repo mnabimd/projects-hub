@@ -33,6 +33,7 @@ graph LR
 ```
 
 ### 2.1 Layered Separation of Concerns
+
 1. **Routes (`src/routes/v1/`)**: Pure routing definitions, middleware pipelines (`auth()`, `validate()`), and OpenAPI Swagger annotations. No business logic.
 2. **Validations (`src/validations/`)**: Declarative Joi schemas for `body`, `query`, and `params`. Validation occurs before request reaches controllers.
 3. **Controllers (`src/controllers/`)**: HTTP boundary handlers. Responsible only for parsing inputs (`req.params`, `req.body`, `req.query`, `req.user`), calling domain services, and returning formatted JSON envelopes. Wrapped in `catchAsync`.
@@ -40,6 +41,7 @@ graph LR
 5. **Models (`src/models/`)**: Mongoose schemas, document methods, static queries, plugins (`toJSON`, `paginate`, `publicId`), and compound/text indexes.
 
 ### 2.2 Standardized API Responses & Status Codes
+
 - **Success Responses**:
   - `200 OK`: Successful retrieval or update.
   - `201 Created`: Resource successfully created. Returns the created entity.
@@ -66,6 +68,7 @@ graph LR
   ```
 
 ### 2.3 Public ID Convention & Security
+
 - Internal MongoDB `_id` values are never exposed in external REST contracts.
 - All entities use URL-safe, prefix-identified `publicId` strings via the `publicId` plugin:
   - Users: `usr_xxxxxxxx`
@@ -81,22 +84,22 @@ graph LR
 
 The current permissions in [`src/config/roles.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/config/roles.js) must be expanded to enforce least-privilege access across academic workflows:
 
-| Permission | Student | Teacher | Faculty Dean | Super Admin | Description |
-|---|:---:|:---:|:---:|:---:|---|
-| `getUniversities` | ✅ | ✅ | ✅ | ✅ | Read university and faculty hierarchies |
-| `manageUniversities` | ❌ | ❌ | Partial* | ✅ | Create/update universities, faculties, departments |
-| `getTags` | ✅ | ✅ | ✅ | ✅ | Query technology tags for filtering & project creation |
-| `manageTags` | ❌ | ✅ | ✅ | ✅ | Create, categorize, or curate technology tags |
-| `createProject` | ✅ | ❌ | ❌ | ✅ | Initialize draft projects |
-| `manageOwnProject` | ✅ | ❌ | ❌ | ✅ | Edit metadata, add members to owned draft projects |
-| `submitProject` | ✅ | ❌ | ❌ | ✅ | Submit project for academic supervisor review |
-| `reviewProject` | ❌ | ✅ | ✅ | ✅ | Append review actions (approve, reject, revision) |
-| `assignSupervisor` | ❌ | ❌ | ✅ | ✅ | Assign or reassign faculty supervisor to projects |
-| `publishProject` | ❌ | ❌ | ✅ | ✅ | Final dean sign-off (unlocks public catalog view) |
-| `getNotifications` | ✅ | ✅ | ✅ | ✅ | Access user notification inbox |
-| `manageUsers` | ❌ | ❌ | Partial* | ✅ | Provision or update departmental student/teacher accounts |
+| Permission           | Student | Teacher | Faculty Dean | Super Admin | Description                                               |
+| -------------------- | :-----: | :-----: | :----------: | :---------: | --------------------------------------------------------- |
+| `getUniversities`    |   ✅    |   ✅    |      ✅      |     ✅      | Read university and faculty hierarchies                   |
+| `manageUniversities` |   ❌    |   ❌    |  Partial\*   |     ✅      | Create/update universities, faculties, departments        |
+| `getTags`            |   ✅    |   ✅    |      ✅      |     ✅      | Query technology tags for filtering & project creation    |
+| `manageTags`         |   ❌    |   ✅    |      ✅      |     ✅      | Create, categorize, or curate technology tags             |
+| `createProject`      |   ✅    |   ❌    |      ❌      |     ✅      | Initialize draft projects                                 |
+| `manageOwnProject`   |   ✅    |   ❌    |      ❌      |     ✅      | Edit metadata, add members to owned draft projects        |
+| `submitProject`      |   ✅    |   ❌    |      ❌      |     ✅      | Submit project for academic supervisor review             |
+| `reviewProject`      |   ❌    |   ✅    |      ✅      |     ✅      | Append review actions (approve, reject, revision)         |
+| `assignSupervisor`   |   ❌    |   ❌    |      ✅      |     ✅      | Assign or reassign faculty supervisor to projects         |
+| `publishProject`     |   ❌    |   ❌    |      ✅      |     ✅      | Final dean sign-off (unlocks public catalog view)         |
+| `getNotifications`   |   ✅    |   ✅    |      ✅      |     ✅      | Access user notification inbox                            |
+| `manageUsers`        |   ❌    |   ❌    |  Partial\*   |     ✅      | Provision or update departmental student/teacher accounts |
 
-*\*Note: Faculty Deans are scoped exclusively to their own `universityId` and `facultyId`.*
+_\*Note: Faculty Deans are scoped exclusively to their own `universityId` and `facultyId`._
 
 ---
 
@@ -135,7 +138,9 @@ gantt
 ### Phase 1: Academic Reference Data & RBAC Foundation
 
 #### 1.1 Objectives
+
 Build the institutional hierarchies required by user profiles and project submissions:
+
 - Universities (Institutions)
 - Faculties & Embedded Departments
 - Technology Tags
@@ -143,6 +148,7 @@ Build the institutional hierarchies required by user profiles and project submis
 #### 1.2 Endpoints Specification
 
 ##### Universities & Faculties
+
 - `GET /v1/universities`: List all active universities. (Public or Authenticated)
 - `POST /v1/universities`: Register a university. (Requires `manageUniversities`)
 - `GET /v1/universities/:universityId`: Detailed university profile.
@@ -151,11 +157,13 @@ Build the institutional hierarchies required by user profiles and project submis
 - `POST /v1/faculties/:facultyId/departments`: Append department to faculty array. (Requires `manageUniversities`)
 
 ##### Technology Tags
+
 - `GET /v1/tags`: Query tags with optional `?category=backend|frontend|ai|mobile` and pagination.
 - `POST /v1/tags`: Create tag with auto-slugification (e.g., `Node.js` -> `node-js`). (Requires `manageTags`)
 - `GET /v1/tags/:tagId`: Tag details and project usage count.
 
 #### 1.3 Key Architectural Deliverables
+
 - [`src/config/roles.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/config/roles.js): Synchronize expanded permissions.
 - [`src/validations/university.validation.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/validations/): Joi schemas validating domain uniqueness and department structures.
 - [`src/services/university.service.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/services/): Atomic MongoDB update operations (`$push`, `$pull` for embedded departments).
@@ -166,20 +174,26 @@ Build the institutional hierarchies required by user profiles and project submis
 ### Phase 2: Media Storage & Secure Upload Pipeline
 
 #### 2.1 Objectives
+
 Provide unified upload handling for project deliverables:
+
 1. **Monographs**: Academic thesis/report (PDF format, up to 25MB).
 2. **Software Screenshots**: UI/UX previews (JPEG, PNG, WebP format, up to 5MB each, max 5 files).
 
 #### 2.2 Storage Architecture Pattern
+
 Implement an extensible adapter in `src/utils/storage/`:
+
 - **Local Driver (`LocalStorageProvider`)**: Saves files to `apps/api/uploads/` (ideal for zero-dependency local dev and CI/CD).
 - **S3 Driver (`S3StorageProvider`)**: Streams uploads to AWS S3, Cloudflare R2, or MinIO via AWS SDK v3.
 
 #### 2.3 Endpoints Specification
+
 - `POST /v1/uploads/monograph`: Single PDF file. Returns `{ fileUrl: "...", originalName: "...", size: 12345 }`.
 - `POST /v1/uploads/screenshots`: Multi-part array of images (`maxCount: 5`). Returns `{ fileUrls: [ "..." ] }`.
 
 #### 2.4 Security & Validation Guardrails
+
 - Magic number / MIME type verification (prevents renaming `.exe` to `.pdf`).
 - File name sanitization with UUID or cryptographically random hashes (`crypto.randomUUID() + path.extname(file.originalname)`).
 - Rate-limiting upload endpoints to prevent disk exhaustion attacks.
@@ -189,21 +203,23 @@ Implement an extensible adapter in `src/utils/storage/`:
 ### Phase 3: Project Authoring Core & Team Lifecycle
 
 #### 3.1 Objectives
+
 Enable enrolled students to initialize project drafts, attach research/code deliverables, recruit fellow student team members, and prepare for academic submission.
 
 #### 3.2 Endpoints Specification
+
 - `POST /v1/projects`: Create project draft.
-  - *Behavior*: Automatically copies `req.user._id`, `kankorId`, and `fullName` into the `leader` sub-document. Initial state: `status: 'draft'`, `versionNumber: 1`, `isLocked: false`.
+  - _Behavior_: Automatically copies `req.user._id`, `kankorId`, and `fullName` into the `leader` sub-document. Initial state: `status: 'draft'`, `versionNumber: 1`, `isLocked: false`.
 - `GET /v1/projects/my-projects`: List projects where `leader.userId === req.user._id` OR `members.userId === req.user._id`.
 - `GET /v1/projects/:projectId`: Retrieve full project document.
-  - *Access Guard*: Available to project leader, team members, assigned supervisor, faculty dean, and super admin.
+  - _Access Guard_: Available to project leader, team members, assigned supervisor, faculty dean, and super admin.
 - `PATCH /v1/projects/:projectId`: Incremental update of metadata, monograph details, software links, or technology tags.
-  - *Business Invariant*: Blocked if `isLocked === true` or if `status === 'submitted'`. Allowed only when status is `draft` or `revision_requested`.
+  - _Business Invariant_: Blocked if `isLocked === true` or if `status === 'submitted'`. Allowed only when status is `draft` or `revision_requested`.
 - `POST /v1/projects/:projectId/members`: Add team member.
-  - *Validation*: Accepts `{ kankorId }` or `{ userId }`. Verifies that the user exists, belongs to the same institution/faculty, is not already on the team, and has not exceeded maximum team size (default: 4 members).
+  - _Validation_: Accepts `{ kankorId }` or `{ userId }`. Verifies that the user exists, belongs to the same institution/faculty, is not already on the team, and has not exceeded maximum team size (default: 4 members).
 - `DELETE /v1/projects/:projectId/members/:userId`: Remove team member (callable by project leader).
 - `POST /v1/projects/:projectId/submit`: Formal submission.
-  - *Pre-flight Checklist*: Verifies non-empty title, abstract, monograph PDF URL, supervisor assigned/selected, and graduation year. Transitions status from `draft` to `submitted`.
+  - _Pre-flight Checklist_: Verifies non-empty title, abstract, monograph PDF URL, supervisor assigned/selected, and graduation year. Transitions status from `draft` to `submitted`.
 
 ---
 
@@ -225,6 +241,7 @@ stateDiagram-v2
 ```
 
 #### 4.2 State Invariants & Rules
+
 1. **Locking**: When status becomes `approved` or `rejected`, `isLocked` MUST be set to `true`. No further modifications to members, monograph, or software are permitted.
 2. **Version Bumping**: When resubmitting from `revision_requested`, `versionNumber` increments by 1 (`v1 -> v2`).
 3. **Audit Trail**: Each evaluation adds an entry to `reviews[]`:
@@ -235,25 +252,29 @@ stateDiagram-v2
    - `createdAt`: Timestamp.
 
 #### 4.3 Endpoints Specification
+
 - `GET /v1/projects/assigned`: Projects where `assignedTeacherId === req.user._id` (Requires role `teacher`).
 - `PATCH /v1/projects/:projectId/assign-teacher`: Assign supervisor (Requires role `faculty_dean` or `super_admin`).
 - `POST /v1/projects/:projectId/reviews`: Submit review decision and feedback.
-  - *Permissions*: Only the assigned teacher, faculty dean, or super admin.
+  - _Permissions_: Only the assigned teacher, faculty dean, or super admin.
 
 ---
 
 ### Phase 5: Notification Service & Event Hooks
 
 #### 5.1 Objectives
+
 Deliver real-time transactional feedback to students and educators as projects move across lifecycle milestones.
 
 #### 5.2 Event Hook Triggers
+
 1. `PROJECT_SUBMITTED`: Alert assigned supervisor with project title and submission author.
 2. `REVIEW_SUBMITTED (REVISION_REQUESTED)`: Alert team leader and members with review notes.
 3. `PROJECT_APPROVED`: Alert students that their monograph is approved and published.
 4. `PROJECT_REJECTED`: Alert students with rejection rationale.
 
 #### 5.3 Endpoints Specification
+
 - `GET /v1/notifications`: Paginated list of notifications for the authenticated user (`req.user._id`), sorted newest first (`createdAt: -1`).
 - `GET /v1/notifications/unread-count`: Fast count query (`{ userId: req.user._id, isRead: false }`).
 - `PATCH /v1/notifications/:notificationId/read`: Mark single notification as read.
@@ -264,18 +285,22 @@ Deliver real-time transactional feedback to students and educators as projects m
 ### Phase 6: Public Catalog, Advanced Search & Discovery
 
 #### 6.1 Objectives
+
 Provide an ultra-fast, publicly accessible discovery portal for research and software portfolios without requiring authentication.
 
 #### 6.2 Search & Indexing Strategy
+
 Leverages production indexes configured in [`project.model.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/models/project.model.js):
+
 - **Full-Text Search (`$text`)**: Matches keywords across `title`, `monograph.abstract`, and `monograph.keywords`.
 - **Faceted Compound Indexing**: Combines `{ status: 1, graduationYear: -1, facultyId: 1, departmentId: 1, 'software.techTagIds': 1 }` for high-throughput filter navigation.
 
 #### 6.3 Endpoints Specification
+
 - `GET /v1/projects/catalog`:
-  - *Public Access*: No JWT required.
-  - *Enforced Filter*: Hardcoded `{ status: 'approved' }`.
-  - *Query Parameters*:
+  - _Public Access_: No JWT required.
+  - _Enforced Filter_: Hardcoded `{ status: 'approved' }`.
+  - _Query Parameters_:
     - `search`: Text query string.
     - `graduationYear`: Exact match or range.
     - `facultyId`: Filter by faculty.
@@ -295,19 +320,22 @@ Leverages production indexes configured in [`project.model.js`](file:///Users/ap
 ### Phase 7: Quality Assurance, Integration Testing & Documentation
 
 #### 7.1 Testing Matrix (Jest & Supertest)
+
 All modules must include integration tests under `apps/api/tests/integration/`:
 
-| Test Suite | Primary Scenarios Covered |
-|---|---|
-| `university.test.js` | Create institution, reject duplicate domains, append departments. |
-| `tag.test.js` | Tag creation, category filtering, slug generation, duplicate prevention. |
-| `upload.test.js` | MIME verification, rejection of executable files, size threshold checks. |
+| Test Suite                  | Primary Scenarios Covered                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `university.test.js`        | Create institution, reject duplicate domains, append departments.                                                               |
+| `tag.test.js`               | Tag creation, category filtering, slug generation, duplicate prevention.                                                        |
+| `upload.test.js`            | MIME verification, rejection of executable files, size threshold checks.                                                        |
 | `project.lifecycle.test.js` | Create draft -> Add team member -> Submit -> Request revision -> Resubmit (version++) -> Final approval -> Verify locked state. |
-| `catalog.test.js` | Public search, ensure drafts/rejected projects NEVER appear in public catalog. |
-| `notification.test.js` | Automated dispatch on review events, mark as read, unread count. |
+| `catalog.test.js`           | Public search, ensure drafts/rejected projects NEVER appear in public catalog.                                                  |
+| `notification.test.js`      | Automated dispatch on review events, mark as read, unread count.                                                                |
 
 #### 7.2 Database Seed Enhancements
+
 Expand [`src/seed/seed.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/seed/seed.js) to generate a realistic academic ecosystem for local development:
+
 - 2 Universities (e.g., Kabul University, Herat University).
 - 4 Faculties with 10+ Departments.
 - 25 Categorized Technology Tags (React, Node.js, Flutter, PyTorch, Go, etc.).
@@ -315,6 +343,7 @@ Expand [`src/seed/seed.js`](file:///Users/apple/Desktop/Projects/Personal/projec
 - 15 Projects in diverse lifecycle states (`draft`, `submitted`, `revision_requested`, `approved`).
 
 #### 7.3 Developer Experience & API Documentation
+
 - **Swagger / OpenAPI 3.0**: Embedded JSDoc annotations in `src/routes/v1/*.js` served at `/v1/docs`.
 - **Bruno Collection**: Keep HTTP requests up-to-date in [`apps/api/bruno/`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/bruno) with sample environments (`local`, `production`) and pre-request token generation scripts.
 
@@ -335,4 +364,4 @@ When submitting a Pull Request for any endpoint in this plan, verify the followi
 
 ---
 
-*Authored by the ProjectsHub Core Engineering Team. Open for community discussion and feature proposals.*
+_Authored by the ProjectsHub Core Engineering Team. Open for community discussion and feature proposals._

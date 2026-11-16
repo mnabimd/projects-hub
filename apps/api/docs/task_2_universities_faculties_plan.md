@@ -2,19 +2,23 @@
 
 > **Phase**: Phase 1 of Master Plan ([`API_DEVELOPMENT_PLAN.md`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/docs/API_DEVELOPMENT_PLAN.md))  
 > **Status**: Ready for Review & Approval  
-> **Target Scope**: Terminology standardization (`institution` ➔ `university`), University CRUD, Faculty management, and Embedded Department operations  
+> **Target Scope**: Terminology standardization (`institution` ➔ `university`), University CRUD, Faculty management, and Embedded Department operations
 
 ---
 
 ## 1. Overview & Architectural Analysis
 
 ### The Problem
+
 Previously, the codebase used two competing terms interchangeably:
+
 1. Generic **`institution`** (`institutionId`, `manageInstitutions`, `getInstitutions`, `sampleInstitutions`).
 2. Concrete **`university`** (`University` model, `/v1/universities`, `universityId`).
 
 ### The Decision
+
 Standardize on **`university`** across all layers of the stack:
+
 - **`University`** is the top-level academic entity (collection: `universities`).
 - **`Faculty`** belongs to a `University` via `universityId` (ref: `University`).
 - **`Department`** is an embedded sub-document inside `Faculty.departments[]`.
@@ -55,24 +59,26 @@ erDiagram
 ## 2. API Contract Specification
 
 ### Universities Endpoints (`/v1/universities`)
-| Method | Endpoint | Auth / Permission | Description |
-|---|---|---|---|
-| `POST` | `/v1/universities` | `auth('manageUniversities')` | Register a university (unique domain required) |
-| `GET` | `/v1/universities` | Public | Paginated list with `name` and `domain` search |
-| `GET` | `/v1/universities/:universityId` | Public | Fetch specific university by ID |
-| `PATCH` | `/v1/universities/:universityId` | `auth('manageUniversities')` | Update university name or domain |
+
+| Method   | Endpoint                         | Auth / Permission            | Description                                             |
+| -------- | -------------------------------- | ---------------------------- | ------------------------------------------------------- |
+| `POST`   | `/v1/universities`               | `auth('manageUniversities')` | Register a university (unique domain required)          |
+| `GET`    | `/v1/universities`               | Public                       | Paginated list with `name` and `domain` search          |
+| `GET`    | `/v1/universities/:universityId` | Public                       | Fetch specific university by ID                         |
+| `PATCH`  | `/v1/universities/:universityId` | `auth('manageUniversities')` | Update university name or domain                        |
 | `DELETE` | `/v1/universities/:universityId` | `auth('manageUniversities')` | Remove university (prevent or cascade-delete faculties) |
 
 ### Faculties & Embedded Departments Endpoints
-| Method | Endpoint | Auth / Permission | Description |
-|---|---|---|---|
-| `POST` | `/v1/universities/:universityId/faculties` | `auth('manageUniversities')` | Create faculty linked to `universityId` |
-| `GET` | `/v1/universities/:universityId/faculties` | Public | List all faculties & departments for a university |
-| `GET` | `/v1/faculties/:facultyId` | Public | Fetch faculty details & embedded departments |
-| `PATCH` | `/v1/faculties/:facultyId` | `auth('manageUniversities')` | Update faculty name |
-| `DELETE` | `/v1/faculties/:facultyId` | `auth('manageUniversities')` | Remove faculty |
-| `POST` | `/v1/faculties/:facultyId/departments` | `auth('manageUniversities')` | Atomically append department (`$push`) |
-| `DELETE` | `/v1/faculties/:facultyId/departments/:departmentId` | `auth('manageUniversities')` | Atomically remove department (`$pull`) |
+
+| Method   | Endpoint                                             | Auth / Permission            | Description                                       |
+| -------- | ---------------------------------------------------- | ---------------------------- | ------------------------------------------------- |
+| `POST`   | `/v1/universities/:universityId/faculties`           | `auth('manageUniversities')` | Create faculty linked to `universityId`           |
+| `GET`    | `/v1/universities/:universityId/faculties`           | Public                       | List all faculties & departments for a university |
+| `GET`    | `/v1/faculties/:facultyId`                           | Public                       | Fetch faculty details & embedded departments      |
+| `PATCH`  | `/v1/faculties/:facultyId`                           | `auth('manageUniversities')` | Update faculty name                               |
+| `DELETE` | `/v1/faculties/:facultyId`                           | `auth('manageUniversities')` | Remove faculty                                    |
+| `POST`   | `/v1/faculties/:facultyId/departments`               | `auth('manageUniversities')` | Atomically append department (`$push`)            |
+| `DELETE` | `/v1/faculties/:facultyId/departments/:departmentId` | `auth('manageUniversities')` | Atomically remove department (`$pull`)            |
 
 ---
 
@@ -107,7 +113,9 @@ graph TD
 ---
 
 ### Step 1: Model & Schema Migration (`institutionId` ➔ `universityId`)
+
 Align existing models and configurations with the unified terminology:
+
 1. **[`src/config/roles.js`](file:///Users/apple/Desktop/Projects/Personal/projects-hub/apps/api/src/config/roles.js)**:
    - Replace `getInstitutions` ➔ `getUniversities`
    - Replace `manageInstitutions` ➔ `manageUniversities`
@@ -126,6 +134,7 @@ Align existing models and configurations with the unified terminology:
 ---
 
 ### Step 2: Validation Layer (Joi)
+
 1. **`src/validations/university.validation.js`**:
    - `createUniversity`: `body: { name: Joi.string().required(), domain: Joi.string().required().lowercase() }`
    - `getUniversities`: `query: { name, domain, sortBy, limit, page }`
@@ -145,6 +154,7 @@ Align existing models and configurations with the unified terminology:
 ---
 
 ### Step 3: Domain Service Layer
+
 1. **`src/services/university.service.js`**:
    - `createUniversity(universityBody)`: Throws `400` if domain already registered.
    - `queryUniversities(filter, options)`: Paginated query using `University.paginate`.
@@ -164,6 +174,7 @@ Align existing models and configurations with the unified terminology:
 ---
 
 ### Step 4: Controllers & Express Routes
+
 1. **`src/controllers/university.controller.js`**:
    - Thin handlers delegating to `universityService`.
 2. **`src/controllers/faculty.controller.js`**:
@@ -181,6 +192,7 @@ Align existing models and configurations with the unified terminology:
 ---
 
 ### Step 5: Integration Tests (Jest & Supertest)
+
 1. **`tests/fixtures/university.fixture.js`** & **`tests/fixtures/faculty.fixture.js`**.
 2. **`tests/integration/university.test.js`**:
    - Duplicate domain rejection (`400`).
@@ -195,7 +207,9 @@ Align existing models and configurations with the unified terminology:
 ---
 
 ### Step 6: Bruno API Collections
+
 Create Bruno collections under:
+
 - `apps/api/bruno/universities/`:
   - `01-Create-University.bru`
   - `02-Get-Universities.bru`

@@ -44,7 +44,6 @@ const removeDepartment = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
-
 const getDepartmentProposalSettings = catchAsync(async (req, res) => {
   const result = await facultyService.getDepartmentProposalSettings(req.params.facultyId, req.params.departmentId);
   res.status(httpStatus.OK).send(result);
@@ -52,7 +51,10 @@ const getDepartmentProposalSettings = catchAsync(async (req, res) => {
 
 const updateDepartmentProposalSettings = catchAsync(async (req, res) => {
   const result = await facultyService.updateDepartmentProposalSettings(
-    req.params.facultyId, req.params.departmentId, req.body, req.user
+    req.params.facultyId,
+    req.params.departmentId,
+    req.body,
+    req.user
   );
   res.status(httpStatus.OK).send(result);
 });
@@ -65,5 +67,5 @@ module.exports = {
   addDepartment,
   removeDepartment,
   updateDepartmentProposalSettings,
-  getDepartmentProposalSettings
+  getDepartmentProposalSettings,
 };

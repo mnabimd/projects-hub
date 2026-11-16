@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
 const mongoose = require('mongoose');
-const { Faculty, University, User, Project, SystemConfig } = require('../models');
+const { Faculty, University, User, Project } = require('../models');
 const ApiError = require('../utils/ApiError');
 const systemConfigService = require('./systemConfig.service');
 // const SystemConfig = require('../models/systemConfig.model')
@@ -141,9 +141,8 @@ const resolveSettings = (department, systemConfig) => {
   const defaults = systemConfig.proposalDefaults || {};
   return {
     submissionMode: d.submissionMode || defaults.submissionMode || 'pdf',
-    allowedTypes: d.allowedTypes && d.allowedTypes.length > 0
-      ? d.allowedTypes
-      : defaults.allowedTypes || ['universal', 'science'],
+    allowedTypes:
+      d.allowedTypes && d.allowedTypes.length > 0 ? d.allowedTypes : defaults.allowedTypes || ['universal', 'science'],
     maxTeamSize: d.maxTeamSize ?? defaults.maxTeamSize ?? 4,
     isSubmissionOpen: d.isSubmissionOpen ?? true,
     submissionDeadline: d.submissionDeadline ?? null,
@@ -165,8 +164,7 @@ const updateDepartmentProposalSettings = async (facultyId, departmentId, updateB
   if (user.role !== 'department_head') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden: Only the department head can manage department proposal settings');
   }
-  if (user.facultyId?.toString() !== facultyId.toString() ||
-      user.departmentId?.toString() !== departmentId.toString()) {
+  if (user.facultyId?.toString() !== facultyId.toString() || user.departmentId?.toString() !== departmentId.toString()) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden: You can only manage settings for your own assigned department');
   }
   const faculty = await Faculty.findById(facultyId);
